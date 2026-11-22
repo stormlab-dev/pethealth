@@ -28,6 +28,14 @@ configuration on an emulator or phone (Android 8.0+). Or from a terminal with th
 On a Mac: `brew install xcodegen && cd ios && xcodegen && open PetPulse.xcodeproj`, then Run.
 Details in `ios/README.md`.
 
+## Try it on your phone or in a browser
+
+- **Android:** every build of `main` publishes a test APK under Releases:
+  `https://github.com/stormlab-dev/pethealth/releases/latest/download/petpulse-debug.apk`
+- **Web:** published to `https://stormlab-dev.github.io/pethealth/` on every push to `main`
+  (one-time: Settings → Pages → Source: GitHub Actions).
+- **iPhone:** see `docs/TESTFLIGHT.md`.
+
 ## CI
 
 `.github/workflows/build.yml` runs the core tests, builds the Android APK, builds the iPhone

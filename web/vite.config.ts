@@ -1,4 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig({ plugins: [react()] });
+// VITE_BASE lets the same build run at a sub-path, e.g. GitHub Pages serves it at /pethealth/.
+export default defineConfig({
+  base: process.env.VITE_BASE ?? "/",
+  plugins: [react()],
+});

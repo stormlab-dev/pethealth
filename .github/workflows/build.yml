@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -16,10 +18,23 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests and debug APK
         run: ./gradlew :core:jvmTest :app:assembleDebug --console=plain
+      - name: Name the APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk petpulse-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: petpulse-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: petpulse-debug.apk
+      # Every build of main becomes a GitHub release, so the newest APK is always at
+      # https://github.com/<owner>/<repo>/releases/latest/download/petpulse-debug.apk
+      - name: Publish test APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-build-${{ github.run_number }}
+          name: Android test build ${{ github.run_number }}
+          body: Debug build for testing. On your phone, open this page, download petpulse-debug.apk and allow installs from this source.
+          files: petpulse-debug.apk
+          make_latest: true
 
   web:
     runs-on: ubuntu-latest
