@@ -55,17 +55,23 @@ class MockPharmacyProvider(
         CatalogItem("sku-rx-apoquel", "Apoquel 16 mg, 30 ct", 8999, true),
     )
 
+    @Throws(Exception::class)
+
     override suspend fun link(authCode: String): LinkedAccount {
         delay(latencyMs)
         if (authCode.isBlank()) throw IntegrationException.Rejected("Sign-in was cancelled")
         return LinkedAccount(info.id, "demo-${authCode.hashCode().toUInt()}", "Demo account")
     }
 
+    @Throws(Exception::class)
+
     override suspend fun prescriptions(account: LinkedAccount): List<Prescription> {
         delay(latencyMs)
         requireLinked(account)
         return rx.map { it.copy(refillsRemaining = it.refillsRemaining - (refillsUsed[it.id] ?: 0)) }
     }
+
+    @Throws(Exception::class)
 
     override suspend fun requestRefill(account: LinkedAccount, prescriptionId: String, quantity: Int?): RefillOrder {
         delay(latencyMs)
@@ -88,6 +94,8 @@ class MockPharmacyProvider(
         return order
     }
 
+    @Throws(Exception::class)
+
     override suspend fun order(account: LinkedAccount, orderId: String): RefillOrder {
         delay(latencyMs)
         requireLinked(account)
@@ -107,6 +115,8 @@ class MockPharmacyProvider(
             estimatedDelivery = o.placedAt.toLocalDateTime(timeZone).date.plus(4, DateTimeUnit.DAY),
         ).also { orders[orderId] = it }
     }
+
+    @Throws(Exception::class)
 
     override suspend fun searchCatalog(query: String): List<CatalogItem> {
         delay(latencyMs)

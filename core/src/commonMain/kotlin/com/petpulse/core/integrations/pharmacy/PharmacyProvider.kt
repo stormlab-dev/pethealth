@@ -40,7 +40,10 @@ interface PharmacyProvider {
     val info: ProviderInfo
 
     /** Exchanges an OAuth authorization code (or demo login) for a linked account. */
+    @Throws(Exception::class)
     suspend fun link(authCode: String): LinkedAccount
+
+    @Throws(Exception::class)
 
     suspend fun prescriptions(account: LinkedAccount): List<Prescription>
 
@@ -48,9 +51,14 @@ interface PharmacyProvider {
      * Requests a refill. Most pharmacies route this to the prescribing vet for approval, so the
      * returned order usually starts in [OrderState.AWAITING_VET_APPROVAL].
      */
+    @Throws(Exception::class)
     suspend fun requestRefill(account: LinkedAccount, prescriptionId: String, quantity: Int? = null): RefillOrder
 
+    @Throws(Exception::class)
+
     suspend fun order(account: LinkedAccount, orderId: String): RefillOrder
+
+    @Throws(Exception::class)
 
     suspend fun searchCatalog(query: String): List<CatalogItem>
 }

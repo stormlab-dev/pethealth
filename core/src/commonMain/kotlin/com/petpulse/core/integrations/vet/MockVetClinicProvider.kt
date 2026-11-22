@@ -47,6 +47,8 @@ class MockVetClinicProvider(
     private val today get() = clock.todayIn(timeZone)
     private fun monthsAgo(n: Int) = today.minus(n, DateTimeUnit.MONTH)
 
+    @Throws(Exception::class)
+
     override suspend fun searchClinics(query: ClinicQuery): List<Clinic> {
         delay(latencyMs)
         var result = clinics.filter { !query.emergencyOnly || it.isEmergency24h }
@@ -59,12 +61,16 @@ class MockVetClinicProvider(
         return result
     }
 
+    @Throws(Exception::class)
+
     override suspend fun linkPatient(clinicId: String, ownerPhone: String, petName: String, verificationCode: String): PatientLink {
         delay(latencyMs)
         clinic(clinicId)
         if (verificationCode != DEMO_CODE) throw IntegrationException.Rejected("That code didn't match. (Demo code: $DEMO_CODE)")
         return PatientLink(clinicId, "pt-${(clinicId + petName.lowercase()).hashCode().toUInt()}", petName)
     }
+
+    @Throws(Exception::class)
 
     override suspend fun records(link: PatientLink): MedicalRecord {
         delay(latencyMs)
@@ -93,6 +99,8 @@ class MockVetClinicProvider(
         )
     }
 
+    @Throws(Exception::class)
+
     override suspend fun availableSlots(clinicId: String, from: LocalDate, days: Int): List<AppointmentSlot> {
         delay(latencyMs)
         val c = clinic(clinicId)
@@ -109,6 +117,8 @@ class MockVetClinicProvider(
             .filter { it > now && it !in taken }
             .map { AppointmentSlot(clinicId, it, 30, if (it.hour < 13) "Dr. Demo" else "Dr. Sample") }
     }
+
+    @Throws(Exception::class)
 
     override suspend fun book(slot: AppointmentSlot, link: PatientLink?, petName: String, reason: String, triageSummary: String?): Appointment {
         delay(latencyMs)
@@ -128,6 +138,8 @@ class MockVetClinicProvider(
         booked[appt.id] = appt
         return appt
     }
+
+    @Throws(Exception::class)
 
     override suspend fun cancel(appointmentId: String): Appointment {
         delay(latencyMs)

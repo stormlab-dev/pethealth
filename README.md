@@ -5,8 +5,9 @@ vaccines, medication reminders and refill alerts, plus pharmacy and vet clinic i
 
 | Folder | What |
 |---|---|
-| `core/` | Pure Kotlin: models, triage engine, dose/refill/vaccine/weight logic, partner interfaces and mocks. 24 unit tests. |
+| `core/` | Shared Kotlin Multiplatform code (Android + iPhone): models, triage engine, dose/refill/vaccine/weight logic, partner interfaces and mocks. 25 unit tests. |
 | `app/` | Android app, Kotlin + Jetpack Compose, Room, WorkManager notifications. |
+| `ios/` | iPhone app, SwiftUI + SwiftData, uses `core` as a framework. See `ios/README.md`. |
 | `web/` | Web companion, React + TypeScript, Supabase or demo mode. |
 | `backend/` | Supabase Postgres schema with row-level security. |
 | `docs/` | `INTEGRATIONS.md` (partners), `CLOUD_AND_WEB.md` (databases, sync, web). |
@@ -21,6 +22,16 @@ configuration on an emulator or phone (Android 8.0+). Or from a terminal with th
 ```
 
 `scripts/test-core.sh` runs the core tests on machines without the Android SDK.
+
+## iPhone
+
+On a Mac: `brew install xcodegen && cd ios && xcodegen && open PetPulse.xcodeproj`, then Run.
+Details in `ios/README.md`.
+
+## CI
+
+`.github/workflows/build.yml` runs the core tests, builds the Android APK, builds the iPhone
+app for the simulator on macOS, and tests and builds the web app.
 
 ### Try it
 

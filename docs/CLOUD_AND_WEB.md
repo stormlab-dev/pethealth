@@ -5,6 +5,7 @@
 | Layer | Tech | Status |
 |---|---|---|
 | Android on-device | Room (SQLite), `app/.../data` | Built. The app works fully offline. |
+| iPhone on-device | SwiftData, `ios/PetPulse/Data` | Built. Same table layout as Room. |
 | Cloud | Supabase (Postgres + Auth + Row Level Security) | Schema ready: `backend/supabase/migrations/0001_init.sql` |
 | Web | React + Vite + supabase-js, `web/` | Built. Runs in demo mode (browser storage) until Supabase keys are set. |
 

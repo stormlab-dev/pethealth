@@ -76,3 +76,14 @@ class HealthCalculationsTest {
         assertEquals("4 mo", PetAge.label(LocalDate(2026, 7, 10), LocalDate(2026, 11, 22)))
     }
 }
+
+class InteropTest {
+    @Test fun datesRoundTrip() {
+        val d = com.petpulse.core.interop.Dates.date(2026, 11, 22)
+        assertEquals(d, com.petpulse.core.interop.Dates.fromEpochDays(com.petpulse.core.interop.Dates.epochDays(d)))
+        assertEquals(LocalDate(2026, 12, 2), com.petpulse.core.interop.Dates.plusDays(d, 10))
+        val i = com.petpulse.core.interop.Dates.instant(1_700_000_000_000)
+        assertEquals(1_700_000_000_000, com.petpulse.core.interop.Dates.epochMillis(i))
+        assertEquals(1, com.petpulse.core.interop.Partners.demo().pharmacies.size)
+    }
+}
