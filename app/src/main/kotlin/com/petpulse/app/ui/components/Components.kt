@@ -70,7 +70,7 @@ fun DateField(label: String, value: LocalDate?, onChange: (LocalDate) -> Unit, m
     val ctx = LocalContext.current
     val open = {
         val d = value ?: today()
-        DatePickerDialog(ctx, { _, y, m, day -> onChange(LocalDate(y, m + 1, day)) }, d.year, d.monthValue - 1, d.dayOfMonth).apply {
+        DatePickerDialog(ctx, { _, y, m, day -> onChange(LocalDate(y, m + 1, day)) }, d.year, d.monthNumber - 1, d.dayOfMonth).apply {
             if (maxToday) datePicker.maxDate = System.currentTimeMillis()
         }.show()
     }
