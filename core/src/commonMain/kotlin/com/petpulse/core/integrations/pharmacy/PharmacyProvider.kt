@@ -2,8 +2,8 @@ package com.petpulse.core.integrations.pharmacy
 
 import com.petpulse.core.integrations.LinkedAccount
 import com.petpulse.core.integrations.ProviderInfo
-import java.time.Instant
-import java.time.LocalDate
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 
 data class Prescription(
     val id: String,

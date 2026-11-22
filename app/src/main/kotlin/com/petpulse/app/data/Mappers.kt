@@ -1,48 +1,49 @@
 package com.petpulse.app.data
 
 import com.petpulse.core.model.*
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
+import com.petpulse.app.util.epochDay
+import com.petpulse.app.util.epochDayToDate
+import com.petpulse.app.util.millisToInstant
+import kotlinx.datetime.LocalTime
 
 fun PetEntity.toModel() = Pet(
     id = id, name = name, species = Species.valueOf(species), breed = breed, sex = Sex.valueOf(sex),
-    neutered = neutered, birthDate = birthEpochDay?.let(LocalDate::ofEpochDay), microchipId = microchipId, notes = notes,
+    neutered = neutered, birthDate = birthEpochDay?.epochDayToDate(), microchipId = microchipId, notes = notes,
 )
 
 fun Pet.toEntity() = PetEntity(
     id = id, name = name.trim(), species = species.name, breed = breed?.trim()?.ifEmpty { null }, sex = sex.name,
-    neutered = neutered, birthEpochDay = birthDate?.toEpochDay(), microchipId = microchipId?.ifBlank { null }, notes = notes?.ifBlank { null },
+    neutered = neutered, birthEpochDay = birthDate?.epochDay(), microchipId = microchipId?.ifBlank { null }, notes = notes?.ifBlank { null },
 )
 
 fun SymptomEntity.toModel() = SymptomEntry(
     id = id, petId = petId,
     symptoms = symptomKeys.split(',').filter { it.isNotBlank() }.map(Symptom::fromKey).toSet(),
     severity = Severity.valueOf(severity),
-    startedAt = Instant.ofEpochMilli(startedAtMillis), loggedAt = Instant.ofEpochMilli(loggedAtMillis), notes = notes,
+    startedAt = startedAtMillis.millisToInstant(), loggedAt = loggedAtMillis.millisToInstant(), notes = notes,
 )
 
 fun SymptomEntry.toEntity(urgency: String?) = SymptomEntity(
     id = id, petId = petId, symptomKeys = symptoms.joinToString(",") { it.key }, severity = severity.name,
-    startedAtMillis = startedAt.toEpochMilli(), loggedAtMillis = loggedAt.toEpochMilli(), notes = notes?.ifBlank { null }, urgency = urgency,
+    startedAtMillis = startedAt.toEpochMilliseconds(), loggedAtMillis = loggedAt.toEpochMilliseconds(), notes = notes?.ifBlank { null }, urgency = urgency,
 )
 
-fun WeightEntity.toModel() = WeightEntry(id, petId, kilograms, LocalDate.ofEpochDay(epochDay))
-fun WeightEntry.toEntity() = WeightEntity(id, petId, kilograms, date.toEpochDay())
+fun WeightEntity.toModel() = WeightEntry(id, petId, kilograms, epochDay.epochDayToDate())
+fun WeightEntry.toEntity() = WeightEntity(id, petId, kilograms, date.epochDay())
 
-fun VaccinationEntity.toModel() = Vaccination(id, petId, name, LocalDate.ofEpochDay(administeredEpochDay), validForMonths, clinicName, sourceRecordId)
-fun Vaccination.toEntity() = VaccinationEntity(id, petId, name.trim(), administeredOn.toEpochDay(), validForMonths, clinicName, sourceRecordId)
+fun VaccinationEntity.toModel() = Vaccination(id, petId, name, administeredEpochDay.epochDayToDate(), validForMonths, clinicName, sourceRecordId)
+fun Vaccination.toEntity() = VaccinationEntity(id, petId, name.trim(), administeredOn.epochDay(), validForMonths, clinicName, sourceRecordId)
 
 fun MedicationEntity.toModel(): Medication {
     val parsedTimes = times.split(',').filter { it.isNotBlank() }.map { LocalTime.parse(it.trim()) }
     val schedule = when (scheduleType) {
         "DAILY" -> DoseSchedule.Daily(parsedTimes)
-        "EVERY_N_DAYS" -> DoseSchedule.EveryNDays(intervalDays, parsedTimes.firstOrNull() ?: LocalTime.of(9, 0), LocalDate.ofEpochDay(startEpochDay))
+        "EVERY_N_DAYS" -> DoseSchedule.EveryNDays(intervalDays, parsedTimes.firstOrNull() ?: LocalTime(9, 0), startEpochDay.epochDayToDate())
         else -> DoseSchedule.AsNeeded
     }
     return Medication(
         id = id, petId = petId, name = name, dosage = dosage, schedule = schedule,
-        startDate = LocalDate.ofEpochDay(startEpochDay), endDate = endEpochDay?.let(LocalDate::ofEpochDay),
+        startDate = startEpochDay.epochDayToDate(), endDate = endEpochDay?.epochDayToDate(),
         unitsRemaining = unitsRemaining, unitsPerDose = unitsPerDose, remindersEnabled = remindersEnabled,
         pharmacyPrescriptionId = pharmacyPrescriptionId, pharmacyProviderId = pharmacyProviderId,
     )
@@ -56,7 +57,7 @@ fun Medication.toEntity(): MedicationEntity {
     }
     return MedicationEntity(
         id = id, petId = petId, name = name.trim(), dosage = dosage.trim(), scheduleType = type, times = times,
-        intervalDays = interval, startEpochDay = startDate.toEpochDay(), endEpochDay = endDate?.toEpochDay(),
+        intervalDays = interval, startEpochDay = startDate.epochDay(), endEpochDay = endDate?.epochDay(),
         unitsRemaining = unitsRemaining, unitsPerDose = unitsPerDose, remindersEnabled = remindersEnabled,
         pharmacyPrescriptionId = pharmacyPrescriptionId, pharmacyProviderId = pharmacyProviderId,
     )

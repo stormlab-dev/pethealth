@@ -8,9 +8,9 @@ import com.petpulse.core.triage.TriageEngine
 import com.petpulse.core.triage.TriageResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
+import com.petpulse.app.util.today
+import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.days
 
 /** The app's single source of truth for pet data. */
 class PetRepository(private val db: PetPulseDatabase, private val triage: TriageEngine) {
@@ -33,12 +33,12 @@ class PetRepository(private val db: PetPulseDatabase, private val triage: Triage
 
     suspend fun triage(entry: SymptomEntry): TriageResult {
         val pet = getPet(entry.petId) ?: error("Pet ${entry.petId} not found")
-        val since = entry.loggedAt.minus(Duration.ofDays(14)).toEpochMilli()
+        val since = (entry.loggedAt - 14.days).toEpochMilliseconds()
         val recent = db.health().symptomsSince(pet.id, since).map { it.toModel() }.filter { it.id != entry.id }
         val weights = db.health().weights(pet.id).map { it.toModel() }
         val ctx = TriageContext(
             pet = pet,
-            ageYears = PetAge.years(pet.birthDate, LocalDate.now()),
+            ageYears = PetAge.years(pet.birthDate, today()),
             recentEntries = recent,
             recentWeightChangePercent = WeightAnalyzer.trend(weights)?.takeIf { it.overDays <= 45 }?.changePercent,
         )
@@ -76,7 +76,7 @@ class PetRepository(private val db: PetPulseDatabase, private val triage: Triage
     suspend fun deleteMedication(id: Long) = db.meds().delete(id)
 
     suspend fun recordDose(medId: Long, scheduledFor: Instant, taken: Boolean) {
-        db.meds().logDose(DoseLogEntity(medicationId = medId, scheduledForMillis = scheduledFor.toEpochMilli(), takenAtMillis = if (taken) System.currentTimeMillis() else null, skipped = !taken))
+        db.meds().logDose(DoseLogEntity(medicationId = medId, scheduledForMillis = scheduledFor.toEpochMilliseconds(), takenAtMillis = if (taken) System.currentTimeMillis() else null, skipped = !taken))
         if (taken) db.meds().decrementUnits(medId)
     }
 

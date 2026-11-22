@@ -4,8 +4,8 @@ import com.petpulse.core.model.*
 import com.petpulse.core.triage.RuleBasedTriageEngine
 import com.petpulse.core.triage.TriageContext
 import com.petpulse.core.triage.Urgency
-import java.time.Duration
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.hours
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -18,7 +18,7 @@ class TriageTest {
     private val femaleCat = Pet(3, "Luna", Species.CAT, sex = Sex.FEMALE)
 
     private fun entry(vararg s: Symptom, severity: Severity = Severity.MILD, hoursAgo: Long = 2, petId: Long = 1) =
-        SymptomEntry(petId = petId, symptoms = s.toSet(), severity = severity, startedAt = now.minus(Duration.ofHours(hoursAgo)), loggedAt = now)
+        SymptomEntry(petId = petId, symptoms = s.toSet(), severity = severity, startedAt = now - hoursAgo.hours, loggedAt = now)
 
     private fun assess(pet: Pet, e: SymptomEntry, age: Double? = 4.0, recent: List<SymptomEntry> = emptyList(), weight: Double? = null) =
         engine.assessNow(e, TriageContext(pet, age, recent, weight))

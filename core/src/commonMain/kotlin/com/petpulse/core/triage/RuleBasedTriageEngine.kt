@@ -6,8 +6,10 @@ import com.petpulse.core.model.Species
 import com.petpulse.core.model.Symptom
 import com.petpulse.core.model.Symptom.*
 import com.petpulse.core.model.SymptomEntry
-import java.time.Duration
 import kotlin.math.abs
+import kotlin.math.roundToInt
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 /**
  * Conservative, offline triage based on widely published veterinary red flags.
@@ -22,8 +24,8 @@ class RuleBasedTriageEngine : TriageEngine {
         val findings = mutableListOf<Pair<Urgency, String>>()
         val s = entry.symptoms
         val pet = context.pet
-        val duration = Duration.between(entry.startedAt, entry.loggedAt).coerceAtLeast(Duration.ZERO)
-        val hours = duration.toHours()
+        val duration = (entry.loggedAt - entry.startedAt).coerceAtLeast(Duration.ZERO)
+        val hours = duration.inWholeHours
         fun add(u: Urgency, why: String) = findings.add(u to why)
 
         // --- Emergencies -------------------------------------------------------------
@@ -96,7 +98,7 @@ class RuleBasedTriageEngine : TriageEngine {
         context.recentWeightChangePercent?.let {
             if (abs(it) >= 10) add(
                 Urgency.BOOK_VISIT,
-                "Weight changed ${"%.0f".format(abs(it))}% in the last month, which is worth discussing with your vet.",
+                "Weight changed ${abs(it).roundToInt()}% in the last month, which is worth discussing with your vet.",
             )
         }
         val repeats = recurringSymptoms(entry, context.recentEntries)
@@ -114,8 +116,8 @@ class RuleBasedTriageEngine : TriageEngine {
     }
 
     private fun recurringSymptoms(entry: SymptomEntry, recent: List<SymptomEntry>): List<Symptom> {
-        val since = entry.loggedAt.minus(Duration.ofDays(14))
-        val window = recent.filter { it.loggedAt.isAfter(since) }
+        val since = entry.loggedAt - 14.days
+        val window = recent.filter { it.loggedAt > since }
         return entry.symptoms.filter { sym -> sym != OTHER && window.count { sym in it.symptoms } >= 2 }
     }
 

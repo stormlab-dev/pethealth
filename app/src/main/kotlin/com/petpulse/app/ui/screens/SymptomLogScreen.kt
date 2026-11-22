@@ -25,16 +25,18 @@ import com.petpulse.core.model.SymptomEntry
 import com.petpulse.core.triage.TriageResult
 import com.petpulse.core.triage.Urgency
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
+import kotlinx.datetime.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 
 /** When the owner first noticed the problem, as offset from now. */
 enum class Onset(val label: String, val ago: Duration) {
     NOW("Just now", Duration.ZERO),
-    HOURS("A few hours ago", Duration.ofHours(4)),
-    DAY("About a day", Duration.ofHours(26)),
-    TWO_DAYS("2–3 days", Duration.ofDays(2)),
-    WEEK("A week or more", Duration.ofDays(7)),
+    HOURS("A few hours ago", 4.hours),
+    DAY("About a day", 26.hours),
+    TWO_DAYS("2–3 days", 2.days),
+    WEEK("A week or more", 7.days),
 }
 
 class SymptomLogViewModel(private val repo: PetRepository, private val petId: Long) : ViewModel() {
@@ -53,8 +55,8 @@ class SymptomLogViewModel(private val repo: PetRepository, private val petId: Lo
     }
 
     private fun entry(): SymptomEntry {
-        val now = Instant.now()
-        return SymptomEntry(petId = petId, symptoms = selected, severity = severity, startedAt = now.minus(onset.ago), loggedAt = now, notes = notes)
+        val now = Clock.System.now()
+        return SymptomEntry(petId = petId, symptoms = selected, severity = severity, startedAt = now - onset.ago, loggedAt = now, notes = notes)
     }
 
     fun assess() = viewModelScope.launch { result = repo.triage(entry()) }

@@ -20,12 +20,13 @@ import com.petpulse.app.AppContainer
 import com.petpulse.app.ui.appViewModel
 import com.petpulse.app.ui.components.DateField
 import com.petpulse.app.ui.components.showTimePicker
-import com.petpulse.app.ui.components.timeFormat
 import com.petpulse.core.model.DoseSchedule
 import com.petpulse.core.model.Medication
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.LocalTime
+import com.petpulse.app.util.pretty
+import com.petpulse.app.util.today
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 enum class ScheduleKind(val label: String) { DAILY("Daily"), INTERVAL("Every N days"), AS_NEEDED("As needed") }
 
@@ -33,9 +34,9 @@ class MedicationEditViewModel(private val c: AppContainer, private val petId: Lo
     var name by mutableStateOf("")
     var dosage by mutableStateOf("")
     var kind by mutableStateOf(ScheduleKind.DAILY)
-    var times by mutableStateOf(listOf(LocalTime.of(8, 0)))
+    var times by mutableStateOf(listOf(LocalTime(8, 0)))
     var intervalDays by mutableStateOf("30")
-    var startDate by mutableStateOf(LocalDate.now())
+    var startDate by mutableStateOf(today())
     var endDate by mutableStateOf<LocalDate?>(null)
     var unitsRemaining by mutableStateOf("")
     var unitsPerDose by mutableStateOf("1")
@@ -110,7 +111,7 @@ fun MedicationEditScreen(petId: Long, medId: Long?, onDone: () -> Unit) {
                 ScheduleKind.entries.forEachIndexed { i, k ->
                     SegmentedButton(selected = vm.kind == k, onClick = {
                         vm.kind = k
-                        if (k == ScheduleKind.INTERVAL) vm.times = vm.times.take(1).ifEmpty { listOf(LocalTime.of(9, 0)) }
+                        if (k == ScheduleKind.INTERVAL) vm.times = vm.times.take(1).ifEmpty { listOf(LocalTime(9, 0)) }
                     }, shape = SegmentedButtonDefaults.itemShape(i, ScheduleKind.entries.size)) { Text(k.label) }
                 }
             }
@@ -123,12 +124,12 @@ fun MedicationEditScreen(petId: Long, medId: Long?, onDone: () -> Unit) {
                         InputChip(
                             selected = false,
                             onClick = { showTimePicker(ctx, t) { picked -> vm.times = vm.times.toMutableList().also { it[i] = picked } } },
-                            label = { Text(t.format(timeFormat)) },
+                            label = { Text(t.pretty()) },
                         )
                         if (vm.times.size > 1) TextButton(onClick = { vm.times = vm.times.filterIndexed { j, _ -> j != i } }) { Text("Remove") }
                     }
                     if (vm.kind == ScheduleKind.DAILY) AssistChip(onClick = {
-                        showTimePicker(ctx, LocalTime.of(20, 0)) { picked -> vm.times = (vm.times + picked).distinct().sorted() }
+                        showTimePicker(ctx, LocalTime(20, 0)) { picked -> vm.times = (vm.times + picked).distinct().sorted() }
                     }, label = { Text("+ Add time") })
                 }
             }

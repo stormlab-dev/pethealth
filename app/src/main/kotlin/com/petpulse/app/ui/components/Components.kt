@@ -19,14 +19,11 @@ import androidx.compose.ui.unit.dp
 import com.petpulse.app.ui.theme.urgencyColor
 import com.petpulse.core.model.Species
 import com.petpulse.core.triage.Urgency
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import com.petpulse.app.util.pretty
+import com.petpulse.app.util.today
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
-val dateFormat: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-val timeFormat: DateTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
-val dateTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE d MMM, h:mm a")
 
 fun speciesEmoji(s: Species) = when (s) {
     Species.DOG -> "🐕"; Species.CAT -> "🐈"; Species.RABBIT -> "🐇"
@@ -72,14 +69,14 @@ fun EmptyState(text: String, modifier: Modifier = Modifier) {
 fun DateField(label: String, value: LocalDate?, onChange: (LocalDate) -> Unit, modifier: Modifier = Modifier, maxToday: Boolean = true) {
     val ctx = LocalContext.current
     val open = {
-        val d = value ?: LocalDate.now()
-        DatePickerDialog(ctx, { _, y, m, day -> onChange(LocalDate.of(y, m + 1, day)) }, d.year, d.monthValue - 1, d.dayOfMonth).apply {
+        val d = value ?: today()
+        DatePickerDialog(ctx, { _, y, m, day -> onChange(LocalDate(y, m + 1, day)) }, d.year, d.monthValue - 1, d.dayOfMonth).apply {
             if (maxToday) datePicker.maxDate = System.currentTimeMillis()
         }.show()
     }
     Box(modifier) {
         OutlinedTextField(
-            value = value?.format(dateFormat) ?: "",
+            value = value?.pretty() ?: "",
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
@@ -92,7 +89,7 @@ fun DateField(label: String, value: LocalDate?, onChange: (LocalDate) -> Unit, m
 }
 
 fun showTimePicker(context: android.content.Context, initial: LocalTime, onPick: (LocalTime) -> Unit) {
-    TimePickerDialog(context, { _, h, m -> onPick(LocalTime.of(h, m)) }, initial.hour, initial.minute, false).show()
+    TimePickerDialog(context, { _, h, m -> onPick(LocalTime(h, m)) }, initial.hour, initial.minute, false).show()
 }
 
 @Composable

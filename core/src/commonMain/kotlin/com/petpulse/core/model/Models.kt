@@ -1,8 +1,11 @@
 package com.petpulse.core.model
 
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.plus
 
 enum class Species(val label: String) {
     DOG("Dog"), CAT("Cat"), RABBIT("Rabbit"), BIRD("Bird"), REPTILE("Reptile"), OTHER("Other")
@@ -65,7 +68,7 @@ data class SymptomEntry(
     val severity: Severity,
     /** When the owner first noticed the problem. */
     val startedAt: Instant,
-    val loggedAt: Instant = Instant.now(),
+    val loggedAt: Instant = Clock.System.now(),
     val notes: String? = null,
 )
 
@@ -87,7 +90,7 @@ data class Vaccination(
     /** Set when imported from a clinic's records rather than typed in. */
     val sourceRecordId: String? = null,
 ) {
-    val dueOn: LocalDate? get() = validForMonths?.let { administeredOn.plusMonths(it.toLong()) }
+    val dueOn: LocalDate? get() = validForMonths?.let { administeredOn.plus(it, DateTimeUnit.MONTH) }
 }
 
 /** How often a medication is given. */

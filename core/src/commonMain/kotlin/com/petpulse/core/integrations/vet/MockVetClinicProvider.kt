@@ -4,19 +4,28 @@ import com.petpulse.core.integrations.Capability
 import com.petpulse.core.integrations.IntegrationException
 import com.petpulse.core.integrations.ProviderInfo
 import kotlinx.coroutines.delay
-import java.time.Clock
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.LocalTime
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
+import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.pow
 import kotlin.math.sqrt
 
-/** In-memory clinic network. Verification code for linking is always "123456". */
+/**
+ * In-memory clinic network. Verification code for linking is always [DEMO_CODE].
+ * Not thread-safe; call it from one dispatcher (the UI's), as the app does.
+ */
 class MockVetClinicProvider(
-    private val clock: Clock = Clock.systemDefaultZone(),
+    private val clock: Clock = Clock.System,
+    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
     private val latencyMs: Long = 400,
 ) : VetClinicProvider {
 
@@ -33,9 +42,10 @@ class MockVetClinicProvider(
         Clinic("clinic-3", "Demo 24/7 Emergency Vets", "9 Harbor Rd", "+1 555 0911", 37.7649, -122.4294, isEmergency24h = true, acceptsOnlineBooking = false),
     )
 
-    private val booked = ConcurrentHashMap<String, Appointment>()
-    private val seq = AtomicInteger(500)
-    private val today get() = LocalDate.now(clock)
+    private val booked = mutableMapOf<String, Appointment>()
+    private var seq = 500
+    private val today get() = clock.todayIn(timeZone)
+    private fun monthsAgo(n: Int) = today.minus(n, DateTimeUnit.MONTH)
 
     override suspend fun searchClinics(query: ClinicQuery): List<Clinic> {
         delay(latencyMs)
@@ -43,9 +53,9 @@ class MockVetClinicProvider(
         query.text?.trim()?.takeIf { it.isNotEmpty() }?.lowercase()?.let { t ->
             result = result.filter { t in it.name.lowercase() || t in it.address.lowercase() }
         }
-        if (query.latitude != null && query.longitude != null) {
-            result = result.sortedBy { distanceKm(query.latitude, query.longitude, it.latitude, it.longitude) }
-        }
+        val lat = query.latitude
+        val lon = query.longitude
+        if (lat != null && lon != null) result = result.sortedBy { distanceKm(lat, lon, it.latitude, it.longitude) }
         return result
     }
 
@@ -60,26 +70,26 @@ class MockVetClinicProvider(
         delay(latencyMs)
         clinic(link.clinicId)
         val p = link.patientId
-        val lastYear = today.minusMonths(11)
+        val lastYear = monthsAgo(11)
         return MedicalRecord(
             patient = link,
             vaccinations = listOf(
-                RecordVaccination("$p-v1", "Rabies", lastYear, lastYear.plusYears(3)),
-                RecordVaccination("$p-v2", "DHPP / FVRCP", lastYear, lastYear.plusYears(1)),
-                RecordVaccination("$p-v3", "Leptospirosis / FeLV", today.minusMonths(13), today.minusMonths(1)),
+                RecordVaccination("$p-v1", "Rabies", lastYear, lastYear.plus(3, DateTimeUnit.YEAR)),
+                RecordVaccination("$p-v2", "DHPP / FVRCP", lastYear, lastYear.plus(1, DateTimeUnit.YEAR)),
+                RecordVaccination("$p-v3", "Leptospirosis / FeLV", monthsAgo(13), monthsAgo(1)),
             ),
             weights = listOf(
                 RecordWeight("$p-w1", 12.4, lastYear),
-                RecordWeight("$p-w2", 12.9, today.minusMonths(5)),
+                RecordWeight("$p-w2", 12.9, monthsAgo(5)),
             ),
             visits = listOf(
                 RecordVisit("$p-x1", lastYear, "Annual wellness exam", "Healthy. Mild dental tartar; recheck in 12 months.", "Dr. Demo"),
-                RecordVisit("$p-x2", today.minusMonths(5), "Itchy skin", "Suspected allergic dermatitis. Started on Apoquel.", "Dr. Demo"),
+                RecordVisit("$p-x2", monthsAgo(5), "Itchy skin", "Suspected allergic dermatitis. Started on Apoquel.", "Dr. Demo"),
             ),
             prescriptions = listOf(
-                RecordPrescription("$p-r1", "Apoquel 16 mg", "1 tablet once daily", today.minusMonths(5)),
+                RecordPrescription("$p-r1", "Apoquel 16 mg", "1 tablet once daily", monthsAgo(5)),
             ),
-            fetchedAt = clock.instant(),
+            fetchedAt = clock.now(),
         )
     }
 
@@ -88,15 +98,15 @@ class MockVetClinicProvider(
         val c = clinic(clinicId)
         if (!c.acceptsOnlineBooking) return emptyList()
         val taken = booked.values.filter { it.clinicId == clinicId && it.status != AppointmentStatus.CANCELLED }.map { it.start }.toSet()
-        val now = clock.instant().atZone(clock.zone).toLocalDateTime()
-        return (0 until days).map { from.plusDays(it.toLong()) }
+        val now = clock.now().toLocalDateTime(timeZone)
+        return (0 until days).map { from.plus(it, DateTimeUnit.DAY) }
             .filter { it.dayOfWeek != DayOfWeek.SUNDAY }
             .flatMap { day ->
-                // Deterministic "busy" pattern so some slots look taken.
-                (9 until 17).flatMap { h -> listOf(0, 30).map { m -> day.atTime(LocalTime.of(h, m)) } }
+                (9 until 17).flatMap { h -> listOf(0, 30).map { m -> LocalDateTime(day, LocalTime(h, m)) } }
+                    // Deterministic "busy" pattern so some slots look taken.
                     .filter { (it.hour * 7 + it.minute + it.dayOfMonth) % 3 != 0 }
             }
-            .filter { it.isAfter(now) && it !in taken }
+            .filter { it > now && it !in taken }
             .map { AppointmentSlot(clinicId, it, 30, if (it.hour < 13) "Dr. Demo" else "Dr. Sample") }
     }
 
@@ -106,7 +116,7 @@ class MockVetClinicProvider(
         val clash = booked.values.any { it.clinicId == slot.clinicId && it.start == slot.start && it.status != AppointmentStatus.CANCELLED }
         if (clash) throw IntegrationException.Rejected("Sorry, that time was just taken. Please pick another.")
         val appt = Appointment(
-            id = "appt-${seq.incrementAndGet()}",
+            id = "appt-${++seq}",
             clinicId = slot.clinicId,
             patientId = link?.patientId,
             start = slot.start,
@@ -129,9 +139,10 @@ class MockVetClinicProvider(
 
     private fun distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         // Equirectangular approximation; plenty for sorting nearby clinics.
-        val x = Math.toRadians(lon2 - lon1) * cos(Math.toRadians((lat1 + lat2) / 2))
-        val y = Math.toRadians(lat2 - lat1)
-        return sqrt(x.pow(2) + y.pow(2)) * 6371
+        val rad = PI / 180
+        val x = (lon2 - lon1) * rad * cos((lat1 + lat2) / 2 * rad)
+        val y = (lat2 - lat1) * rad
+        return sqrt(x * x + y * y) * 6371
     }
 
     companion object {

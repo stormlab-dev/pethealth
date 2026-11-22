@@ -5,22 +5,26 @@ import com.petpulse.core.integrations.IntegrationException
 import com.petpulse.core.integrations.LinkedAccount
 import com.petpulse.core.integrations.ProviderInfo
 import kotlinx.coroutines.delay
-import java.time.Clock
-import java.time.Duration
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * In-memory pharmacy for demos and tests. Orders advance through approval and shipping based on
  * elapsed time, so the UI can exercise every state without a real partner.
+ * Not thread-safe; call it from one dispatcher (the UI's), as the app does.
  */
 class MockPharmacyProvider(
-    private val clock: Clock = Clock.systemDefaultZone(),
+    private val clock: Clock = Clock.System,
+    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
     private val latencyMs: Long = 400,
     /** How long each order step takes in the simulation. */
-    private val stepDuration: Duration = Duration.ofMinutes(2),
+    private val stepDuration: Duration = 2.minutes,
 ) : PharmacyProvider {
 
     override val info = ProviderInfo(
@@ -30,16 +34,17 @@ class MockPharmacyProvider(
         isDemo = true,
     )
 
-    private val orders = ConcurrentHashMap<String, RefillOrder>()
-    private val refillsUsed = ConcurrentHashMap<String, Int>()
-    private val seq = AtomicInteger(1000)
-    private val today get() = LocalDate.now(clock)
+    private val orders = mutableMapOf<String, RefillOrder>()
+    private val refillsUsed = mutableMapOf<String, Int>()
+    private var seq = 1000
+    private val today get() = clock.todayIn(timeZone)
+    private fun inMonths(n: Int) = today.plus(n, DateTimeUnit.MONTH)
 
-    private val rx = listOf(
-        Prescription("rx-101", "Any pet", "Carprofen", "75 mg chewable", "1 tablet by mouth every 12 hours with food", "Demo Animal Hospital", 3, today.plusMonths(9), 60),
-        Prescription("rx-102", "Any pet", "Apoquel (oclacitinib)", "16 mg", "1 tablet by mouth once daily", "Demo Animal Hospital", 5, today.plusMonths(11), 30),
-        Prescription("rx-103", "Any pet", "Heartgard Plus", "Medium dog", "1 chewable monthly", "Demo Animal Hospital", 1, today.plusMonths(6), 6),
-        Prescription("rx-104", "Any pet", "Methimazole", "5 mg", "1/2 tablet by mouth twice daily", "Demo Cat Clinic", 0, today.plusMonths(2), 60),
+    private val rx get() = listOf(
+        Prescription("rx-101", "Any pet", "Carprofen", "75 mg chewable", "1 tablet by mouth every 12 hours with food", "Demo Animal Hospital", 3, inMonths(9), 60),
+        Prescription("rx-102", "Any pet", "Apoquel (oclacitinib)", "16 mg", "1 tablet by mouth once daily", "Demo Animal Hospital", 5, inMonths(11), 30),
+        Prescription("rx-103", "Any pet", "Heartgard Plus", "Medium dog", "1 chewable monthly", "Demo Animal Hospital", 1, inMonths(6), 6),
+        Prescription("rx-104", "Any pet", "Methimazole", "5 mg", "1/2 tablet by mouth twice daily", "Demo Cat Clinic", 0, inMonths(2), 60),
     )
 
     private val catalog = listOf(
@@ -67,19 +72,18 @@ class MockPharmacyProvider(
         requireLinked(account)
         val p = prescriptions(account).firstOrNull { it.id == prescriptionId }
             ?: throw IntegrationException.NotFound("Prescription $prescriptionId")
-        val now = clock.instant()
-        // No refills left: the pharmacy asks the vet for a new prescription instead of refusing outright.
+        if (p.expiresOn < today) throw IntegrationException.Rejected("This prescription has expired. Ask your vet for a new one.")
+        // No refills left: the pharmacy asks the vet to renew instead of refusing outright.
         val noRefills = p.refillsRemaining <= 0
-        if (p.expiresOn.isBefore(today)) throw IntegrationException.Rejected("This prescription has expired. Ask your vet for a new one.")
         val order = RefillOrder(
-            id = "ord-${seq.incrementAndGet()}",
+            id = "ord-${++seq}",
             prescriptionId = p.id,
             quantity = quantity ?: p.quantityPerFill,
             state = OrderState.AWAITING_VET_APPROVAL,
-            placedAt = now,
+            placedAt = clock.now(),
             message = if (noRefills) "No refills left, so we've asked ${p.prescribingClinic} to renew it." else "Sent to ${p.prescribingClinic} for approval.",
         )
-        if (!noRefills) refillsUsed.merge(p.id, 1, Int::plus)
+        if (!noRefills) refillsUsed[p.id] = (refillsUsed[p.id] ?: 0) + 1
         orders[order.id] = order
         return order
     }
@@ -88,7 +92,7 @@ class MockPharmacyProvider(
         delay(latencyMs)
         requireLinked(account)
         val o = orders[orderId] ?: throw IntegrationException.NotFound("Order $orderId")
-        val steps = Duration.between(o.placedAt, clock.instant()).toMillis() / stepDuration.toMillis().coerceAtLeast(1)
+        val steps = (clock.now() - o.placedAt) / stepDuration
         val state = when {
             o.state == OrderState.CANCELLED || o.state == OrderState.DECLINED -> o.state
             steps < 1 -> OrderState.AWAITING_VET_APPROVAL
@@ -100,7 +104,7 @@ class MockPharmacyProvider(
         return o.copy(
             state = state,
             trackingUrl = if (shipped) "https://example.com/track/${o.id}" else null,
-            estimatedDelivery = o.placedAt.atZone(ZoneId.systemDefault()).toLocalDate().plusDays(4),
+            estimatedDelivery = o.placedAt.toLocalDateTime(timeZone).date.plus(4, DateTimeUnit.DAY),
         ).also { orders[orderId] = it }
     }
 

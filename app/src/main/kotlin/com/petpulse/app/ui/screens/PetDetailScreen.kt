@@ -36,10 +36,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
+import com.petpulse.app.util.epochDay
+import com.petpulse.app.util.nowLocal
+import com.petpulse.app.util.pretty
+import com.petpulse.app.util.today
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlin.math.roundToInt
 
 class PetDetailViewModel(private val c: AppContainer, val petId: Long) : ViewModel() {
     private val repo = c.repository
@@ -60,7 +64,7 @@ class PetDetailViewModel(private val c: AppContainer, val petId: Long) : ViewMod
     fun deleteSymptom(id: Long) = viewModelScope.launch { repo.deleteSymptom(id) }
 
     fun markGiven(med: Medication) = viewModelScope.launch {
-        val now = Instant.now()
+        val now = Clock.System.now()
         repo.recordDose(med.id, now, taken = true)
     }
 }
@@ -129,15 +133,15 @@ private fun OverviewTab(vm: PetDetailViewModel, pet: Pet, onLogSymptoms: () -> U
     val weights by vm.weights.collectAsStateWithLifecycle()
     val symptoms by vm.symptoms.collectAsStateWithLifecycle()
     val appts by vm.appointments.collectAsStateWithLifecycle()
-    val today = LocalDate.now()
-    val now = LocalDateTime.now()
+    val today = today()
+    val now = nowLocal()
 
     TabList {
         item {
             SectionCard("Upcoming doses") {
                 val upcoming = meds.mapNotNull { m -> DoseScheduler.nextDose(m, now)?.let { m to it } }.sortedBy { it.second }.take(4)
                 if (upcoming.isEmpty()) Text("No scheduled medications.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                upcoming.forEach { (m, at) -> Text("${at.format(dateTimeFormat)}  ·  ${m.name} ${m.dosage}") }
+                upcoming.forEach { (m, at) -> Text("${at.pretty()}  ·  ${m.name} ${m.dosage}") }
             }
         }
         item {
@@ -165,7 +169,7 @@ private fun OverviewTab(vm: PetDetailViewModel, pet: Pet, onLogSymptoms: () -> U
                 }
             }
         }
-        val upcomingAppts = appts.filter { it.status != "CANCELLED" && LocalDateTime.parse(it.start).isAfter(now) }
+        val upcomingAppts = appts.filter { it.status != "CANCELLED" && LocalDateTime.parse(it.start) > now }
         if (upcomingAppts.isNotEmpty()) item {
             SectionCard("Appointments") { upcomingAppts.forEach { AppointmentLine(it) } }
         }
@@ -187,7 +191,7 @@ private fun SymptomsTab(vm: PetDetailViewModel) {
     TabList {
         items(entries, key = { it.first.id }) { (e, urgency) ->
             SectionCard(
-                e.loggedAt.atZone(ZoneId.systemDefault()).format(dateTimeFormat),
+                e.loggedAt.pretty(),
                 action = { IconButton(onClick = { vm.deleteSymptom(e.id) }) { Icon(Icons.Filled.Delete, "Delete") } },
             ) {
                 Text(e.symptoms.joinToString { it.label })
@@ -210,7 +214,7 @@ private fun WeightTab(vm: PetDetailViewModel) {
             SectionCard("Weight history", action = { TextButton(onClick = { adding = true }) { Text("Add") } }) {
                 if (weights.size >= 2) WeightChart(weights, Modifier.fillMaxWidth().height(160.dp))
                 WeightAnalyzer.trend(weights)?.let {
-                    val warn = kotlin.math.abs(it.changePercent) >= 10
+                    val warn = kotlin.math.abs(it.changePercent).roundToInt() >= 10
                     Text(
                         "%+.1f kg (%+.0f%%) over %d days".format(it.changeKg, it.changePercent, it.overDays) + if (warn) ". Worth mentioning to your vet." else "",
                         color = if (warn) urgencyColor(Urgency.BOOK_VISIT) else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -221,7 +225,7 @@ private fun WeightTab(vm: PetDetailViewModel) {
         }
         items(weights.reversed(), key = { it.id }) { w ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(w.date.format(dateFormat), Modifier.weight(1f))
+                Text(w.date.pretty(), Modifier.weight(1f))
                 Text("%.2f kg".format(w.kilograms))
                 IconButton(onClick = { vm.deleteWeight(w.id) }) { Icon(Icons.Filled.Delete, "Delete") }
             }
@@ -236,12 +240,12 @@ private fun WeightChart(weights: List<WeightEntry>, modifier: Modifier) {
     val grid = MaterialTheme.colorScheme.outlineVariant
     Canvas(modifier) {
         val sorted = weights.sortedBy { it.date }
-        val minD = sorted.first().date.toEpochDay().toFloat()
-        val spanD = (sorted.last().date.toEpochDay() - sorted.first().date.toEpochDay()).coerceAtLeast(1).toFloat()
+        val minD = sorted.first().date.epochDay().toFloat()
+        val spanD = (sorted.last().date.epochDay() - sorted.first().date.epochDay()).coerceAtLeast(1).toFloat()
         val minW = sorted.minOf { it.kilograms }.toFloat()
         val spanW = (sorted.maxOf { it.kilograms }.toFloat() - minW).coerceAtLeast(0.5f)
         fun pt(w: WeightEntry) = Offset(
-            (w.date.toEpochDay() - minD) / spanD * size.width,
+            (w.date.epochDay() - minD) / spanD * size.width,
             size.height - ((w.kilograms.toFloat() - minW) / spanW * size.height * 0.8f + size.height * 0.1f),
         )
         for (i in 0..3) drawLine(grid, Offset(0f, size.height * i / 3), Offset(size.width, size.height * i / 3), 1f)
@@ -253,7 +257,7 @@ private fun WeightChart(weights: List<WeightEntry>, modifier: Modifier) {
 @Composable
 private fun WeightDialog(onDismiss: () -> Unit, onSave: (Double, LocalDate) -> Unit) {
     var text by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf(LocalDate.now()) }
+    var date by remember { mutableStateOf(today()) }
     val kg = text.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -286,7 +290,7 @@ private fun VaccineLine(v: Vaccination, today: LocalDate) {
         Column(Modifier.weight(1f)) {
             Text(v.name)
             Text(
-                "Given ${v.administeredOn.format(dateFormat)}" + (v.dueOn?.let { " · due ${it.format(dateFormat)}" } ?: ""),
+                "Given ${v.administeredOn.pretty()}" + (v.dueOn?.let { " · due ${it.pretty()}" } ?: ""),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -299,7 +303,7 @@ private fun VaccineLine(v: Vaccination, today: LocalDate) {
 private fun VaccinesTab(vm: PetDetailViewModel) {
     val all by vm.vaccinations.collectAsStateWithLifecycle()
     var adding by remember { mutableStateOf(false) }
-    val today = LocalDate.now()
+    val today = today()
     TabList {
         item {
             SectionCard("Current status", action = { TextButton(onClick = { adding = true }) { Text("Add") } }) {
@@ -313,7 +317,7 @@ private fun VaccinesTab(vm: PetDetailViewModel) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(v.name)
-                    Text(listOfNotNull(v.administeredOn.format(dateFormat), v.clinicName, v.sourceRecordId?.let { "imported" }).joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+                    Text(listOfNotNull(v.administeredOn.pretty(), v.clinicName, v.sourceRecordId?.let { "imported" }).joinToString(" · "), style = MaterialTheme.typography.bodySmall)
                 }
                 IconButton(onClick = { vm.deleteVaccination(v.id) }) { Icon(Icons.Filled.Delete, "Delete") }
             }
@@ -322,7 +326,7 @@ private fun VaccinesTab(vm: PetDetailViewModel) {
     if (adding) {
         var name by remember { mutableStateOf("") }
         var months by remember { mutableStateOf("12") }
-        var date by remember { mutableStateOf(LocalDate.now()) }
+        var date by remember { mutableStateOf(today()) }
         AlertDialog(
             onDismissRequest = { adding = false },
             title = { Text("Add vaccine") },
@@ -352,18 +356,18 @@ private fun VaccinesTab(vm: PetDetailViewModel) {
 @Composable
 private fun MedsTab(vm: PetDetailViewModel, onEditMed: (Long?) -> Unit, onPharmacy: (Long?) -> Unit) {
     val meds by vm.medications.collectAsStateWithLifecycle()
-    val now = LocalDateTime.now()
-    val today = LocalDate.now()
+    val now = nowLocal()
+    val today = today()
     TabList {
         if (meds.isEmpty()) item { EmptyState("Add medications to get dose reminders and refill alerts.") }
         items(meds, key = { it.id }) { m ->
             SectionCard(m.name, action = { IconButton(onClick = { onEditMed(m.id) }) { Icon(Icons.Filled.Edit, "Edit") } }) {
                 Text(m.dosage)
                 Text(scheduleLabel(m.schedule), style = MaterialTheme.typography.bodySmall)
-                DoseScheduler.nextDose(m, now)?.let { Text("Next: ${it.format(dateTimeFormat)}" + if (!m.remindersEnabled) " (reminders off)" else "") }
+                DoseScheduler.nextDose(m, now)?.let { Text("Next: ${it.pretty()}" + if (!m.remindersEnabled) " (reminders off)" else "") }
                 RefillPredictor.forecast(m, today)?.let { f ->
                     Text(
-                        "About ${f.daysLeft} days left · runs out ${f.runsOutOn.format(dateFormat)}",
+                        "About ${f.daysLeft} days left · runs out ${f.runsOutOn.pretty()}",
                         color = if (f.shouldReorder) urgencyColor(Urgency.SEE_VET_24H) else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -381,10 +385,10 @@ private fun MedsTab(vm: PetDetailViewModel, onEditMed: (Long?) -> Unit, onPharma
 
 fun scheduleLabel(s: DoseSchedule): String = when (s) {
     is DoseSchedule.Daily -> when (s.times.size) {
-        1 -> "Once a day at ${s.times[0].format(timeFormat)}"
-        else -> "${s.times.size}× a day: " + s.times.sorted().joinToString { it.format(timeFormat) }
+        1 -> "Once a day at ${s.times[0].pretty()}"
+        else -> "${s.times.size}× a day: " + s.times.sorted().joinToString { it.pretty() }
     }
-    is DoseSchedule.EveryNDays -> if (s.intervalDays == 30) "Monthly at ${s.time.format(timeFormat)}" else "Every ${s.intervalDays} days at ${s.time.format(timeFormat)}"
+    is DoseSchedule.EveryNDays -> if (s.intervalDays == 30) "Monthly at ${s.time.pretty()}" else "Every ${s.intervalDays} days at ${s.time.pretty()}"
     DoseSchedule.AsNeeded -> "As needed"
 }
 
@@ -393,7 +397,7 @@ fun scheduleLabel(s: DoseSchedule): String = when (s) {
 @Composable
 fun AppointmentLine(a: AppointmentEntity) {
     Column {
-        Text("${LocalDateTime.parse(a.start).format(dateTimeFormat)} · ${a.clinicName}")
+        Text("${LocalDateTime.parse(a.start).pretty()} · ${a.clinicName}")
         Text("${a.reason} · ${a.status.lowercase()}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

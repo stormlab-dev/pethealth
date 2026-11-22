@@ -27,15 +27,15 @@ import com.petpulse.app.data.toModel
 import com.petpulse.app.ui.appViewModel
 import com.petpulse.app.ui.components.SectionCard
 import com.petpulse.app.ui.components.StatusPill
-import com.petpulse.app.ui.components.dateFormat
-import com.petpulse.app.ui.components.timeFormat
 import com.petpulse.app.ui.theme.urgencyColor
 import com.petpulse.core.integrations.vet.*
 import com.petpulse.core.triage.Urgency
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import com.petpulse.app.util.millisToInstant
+import com.petpulse.app.util.pretty
+import com.petpulse.app.util.today
 
 class VetViewModel(private val c: AppContainer, private val petId: Long, initialReason: String) : ViewModel() {
     val provider: VetClinicProvider = c.integrations.clinics.first()
@@ -105,7 +105,7 @@ class VetViewModel(private val c: AppContainer, private val petId: Long, initial
 
     fun startBooking(clinic: Clinic) = launchTask {
         bookingClinic = clinic
-        slots = provider.availableSlots(clinic.id, LocalDate.now(), 7)
+        slots = provider.availableSlots(clinic.id, today(), 7)
     }
 
     fun book(slot: AppointmentSlot, onBooked: () -> Unit) = launchTask {
@@ -113,7 +113,7 @@ class VetViewModel(private val c: AppContainer, private val petId: Long, initial
         val l = link.value?.takeIf { it.clinicId == clinic.id }?.let { PatientLink(it.clinicId, it.patientId, petName) }
         val appt = provider.book(slot, l, petName, reason.ifBlank { "General visit" }, if (shareSummary) reason else null)
         dao.upsertAppointment(AppointmentEntity(appt.id, petId, provider.info.id, clinic.id, clinic.name, appt.start.toString(), appt.minutes, appt.reason, appt.status.name))
-        message = if (appt.status == AppointmentStatus.CONFIRMED) "Booked! See you ${appt.start.format(java.time.format.DateTimeFormatter.ofPattern("EEE d MMM 'at' h:mm a"))}." else "Request sent. ${clinic.name} will confirm."
+        message = if (appt.status == AppointmentStatus.CONFIRMED) "Booked! See you ${appt.start.pretty()}." else "Request sent. ${clinic.name} will confirm."
         bookingClinic = null
         onBooked()
     }
@@ -162,12 +162,12 @@ fun VetScreen(petId: Long, reason: String, onBack: () -> Unit) {
                   }
                 }
                 if (vm.slots.isEmpty() && !vm.busy) item { Text("No online slots this week. Call ${booking.phone}.") }
-                vm.slots.groupBy { it.start.toLocalDate() }.forEach { (day, daySlots) ->
+                vm.slots.groupBy { it.start.date }.forEach { (day, daySlots) ->
                     item {
                         Column {
-                            Text(day.format(dateFormat), style = MaterialTheme.typography.titleSmall)
+                            Text(day.pretty(), style = MaterialTheme.typography.titleSmall)
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                daySlots.forEach { s -> SuggestionChip(onClick = { vm.book(s) {} }, label = { Text(s.start.toLocalTime().format(timeFormat)) }, enabled = !vm.busy) }
+                                daySlots.forEach { s -> SuggestionChip(onClick = { vm.book(s) {} }, label = { Text(s.start.time.pretty()) }, enabled = !vm.busy) }
                             }
                         }
                     }
@@ -181,7 +181,7 @@ fun VetScreen(petId: Long, reason: String, onBack: () -> Unit) {
                     if (l == null) Text("Pick your clinic below and verify with the phone number they have on file.")
                     else {
                         Text(l.clinicName)
-                        l.lastSyncedMillis?.let { Text("Records last imported ${java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate().format(dateFormat)}", style = MaterialTheme.typography.bodySmall) }
+                        l.lastSyncedMillis?.let { Text("Records last imported ${it.millisToInstant().pretty()}", style = MaterialTheme.typography.bodySmall) }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { vm.fetchRecords() }, enabled = !vm.busy) { Text("Import records") }
                             OutlinedButton(onClick = { vm.clinics.firstOrNull { it.id == l.clinicId }?.let(vm::startBooking) }) { Text("Book") }
@@ -194,7 +194,7 @@ fun VetScreen(petId: Long, reason: String, onBack: () -> Unit) {
                 item {
                     SectionCard("Visit history") {
                         r.visits.sortedByDescending { it.date }.forEach { v ->
-                            Text("${v.date.format(dateFormat)} · ${v.reason}", style = MaterialTheme.typography.titleSmall)
+                            Text("${v.date.pretty()} · ${v.reason}", style = MaterialTheme.typography.titleSmall)
                             Text("${v.summary} (${v.veterinarian})", style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -245,8 +245,8 @@ fun VetScreen(petId: Long, reason: String, onBack: () -> Unit) {
             title = { Text("Import from ${link?.clinicName.orEmpty()}?") },
             text = {
                 Column {
-                    plan.newVaccinations.forEach { Text("• ${it.name}, ${it.administeredOn.format(dateFormat)}") }
-                    plan.newWeights.forEach { Text("• Weight %.1f kg, %s".format(it.kilograms, it.date.format(dateFormat))) }
+                    plan.newVaccinations.forEach { Text("• ${it.name}, ${it.administeredOn.pretty()}") }
+                    plan.newWeights.forEach { Text("• Weight %.1f kg, %s".format(it.kilograms, it.date.pretty())) }
                 }
             },
             confirmButton = { TextButton(onClick = { vm.confirmImport() }) { Text("Import") } },

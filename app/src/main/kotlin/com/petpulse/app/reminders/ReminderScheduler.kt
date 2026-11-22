@@ -10,9 +10,11 @@ import androidx.work.workDataOf
 import com.petpulse.app.data.PetRepository
 import com.petpulse.core.health.DoseScheduler
 import com.petpulse.core.model.Medication
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneId
+import com.petpulse.app.util.nowLocal
+import com.petpulse.app.util.zone
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toInstant
 import java.util.concurrent.TimeUnit
 
 /**
@@ -22,17 +24,17 @@ import java.util.concurrent.TimeUnit
 class ReminderScheduler(context: Context, private val repository: PetRepository) {
     private val work = WorkManager.getInstance(context)
 
-    fun schedule(med: Medication, after: LocalDateTime = LocalDateTime.now()) {
+    fun schedule(med: Medication, after: LocalDateTime = nowLocal()) {
         if (!med.remindersEnabled) return cancel(med.id)
         val next = DoseScheduler.nextDose(med, after) ?: return cancel(med.id)
-        val zone = ZoneId.systemDefault()
-        val delay = Duration.between(LocalDateTime.now(), next).coerceAtLeast(Duration.ZERO)
+        val nextInstant = next.toInstant(zone)
+        val delayMs = (nextInstant - Clock.System.now()).inWholeMilliseconds.coerceAtLeast(0)
         val request = OneTimeWorkRequestBuilder<DoseReminderWorker>()
-            .setInitialDelay(delay.toMillis(), TimeUnit.MILLISECONDS)
+            .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
             .setInputData(
                 workDataOf(
                     DoseReminderWorker.KEY_MED_ID to med.id,
-                    DoseReminderWorker.KEY_SCHEDULED_FOR to next.atZone(zone).toInstant().toEpochMilli(),
+                    DoseReminderWorker.KEY_SCHEDULED_FOR to nextInstant.toEpochMilliseconds(),
                 ),
             )
             .build()

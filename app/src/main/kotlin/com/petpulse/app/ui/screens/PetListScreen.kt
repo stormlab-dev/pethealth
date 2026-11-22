@@ -24,7 +24,7 @@ import com.petpulse.core.health.PetAge
 import com.petpulse.core.model.Pet
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import java.time.LocalDate
+import com.petpulse.app.util.today
 
 class PetListViewModel(repo: PetRepository) : ViewModel() {
     val pets = repo.pets.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -60,7 +60,7 @@ private fun PetRow(pet: Pet, onClick: () -> Unit) {
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(pet.name, style = MaterialTheme.typography.titleMedium)
-                val details = listOfNotNull(pet.breed ?: pet.species.label, PetAge.label(pet.birthDate, LocalDate.now()))
+                val details = listOfNotNull(pet.breed ?: pet.species.label, PetAge.label(pet.birthDate, today()))
                 Text(details.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

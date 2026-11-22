@@ -1,9 +1,9 @@
 package com.petpulse.core.integrations.vet
 
 import com.petpulse.core.integrations.ProviderInfo
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 
 data class Clinic(
     val id: String,

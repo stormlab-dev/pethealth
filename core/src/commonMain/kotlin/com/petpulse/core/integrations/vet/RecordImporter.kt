@@ -2,7 +2,7 @@ package com.petpulse.core.integrations.vet
 
 import com.petpulse.core.model.Vaccination
 import com.petpulse.core.model.WeightEntry
-import java.time.temporal.ChronoUnit
+import kotlinx.datetime.monthsUntil
 
 data class ImportPlan(val newVaccinations: List<Vaccination>, val newWeights: List<WeightEntry>) {
     val isEmpty get() = newVaccinations.isEmpty() && newWeights.isEmpty()
@@ -26,7 +26,7 @@ object RecordImporter {
                     petId = petId,
                     name = it.name,
                     administeredOn = it.administeredOn,
-                    validForMonths = it.nextDueOn?.let { due -> ChronoUnit.MONTHS.between(it.administeredOn, due).toInt() },
+                    validForMonths = it.nextDueOn?.let { due -> it.administeredOn.monthsUntil(due) },
                     clinicName = clinicName,
                     sourceRecordId = it.recordId,
                 )

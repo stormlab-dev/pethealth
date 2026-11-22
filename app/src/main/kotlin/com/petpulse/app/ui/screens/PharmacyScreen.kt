@@ -19,7 +19,7 @@ import com.petpulse.app.data.RefillOrderEntity
 import com.petpulse.app.ui.appViewModel
 import com.petpulse.app.ui.components.SectionCard
 import com.petpulse.app.ui.components.StatusPill
-import com.petpulse.app.ui.components.dateFormat
+import com.petpulse.app.util.pretty
 import com.petpulse.app.ui.theme.urgencyColor
 import com.petpulse.core.integrations.pharmacy.OrderState
 import com.petpulse.core.integrations.pharmacy.PharmacyProvider
@@ -80,7 +80,7 @@ class PharmacyViewModel(private val c: AppContainer, petId: Long, private val me
         val targetMed = medication
         if (targetMed != null) {
             c.db.integrations().upsertRefillOrder(
-                RefillOrderEntity(order.id, targetMed.id, provider.info.id, rx.id, order.state.name, order.placedAt.toEpochMilli(), order.message, order.trackingUrl),
+                RefillOrderEntity(order.id, targetMed.id, provider.info.id, rx.id, order.state.name, order.placedAt.toEpochMilliseconds(), order.message, order.trackingUrl),
             )
         }
         message = order.message
@@ -155,7 +155,7 @@ private fun PrescriptionCard(rx: Prescription, vm: PharmacyViewModel) {
     SectionCard(rx.drugName) {
         Text("${rx.strength} · ${rx.directions}")
         Text(
-            "${rx.refillsRemaining} refills left · expires ${rx.expiresOn.format(dateFormat)} · ${rx.prescribingClinic}",
+            "${rx.refillsRemaining} refills left · expires ${rx.expiresOn.pretty()} · ${rx.prescribingClinic}",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

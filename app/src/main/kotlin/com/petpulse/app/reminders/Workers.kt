@@ -10,10 +10,12 @@ import com.petpulse.core.health.RefillPredictor
 import com.petpulse.core.health.VaccineStatus
 import com.petpulse.core.health.VaccineTracker
 import com.petpulse.app.data.toModel
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
+import com.petpulse.app.util.local
+import com.petpulse.app.util.pretty
+import com.petpulse.app.util.today
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.plus
 
 class DoseReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
@@ -39,7 +41,7 @@ class DoseReminderWorker(context: Context, params: WorkerParameters) : Coroutine
         }
 
         // Queue the following dose.
-        val after = LocalDateTime.ofInstant(Instant.ofEpochMilli(scheduledFor), ZoneId.systemDefault())
+        val after = Instant.fromEpochMilliseconds(scheduledFor).local()
         container.reminders.schedule(med, after)
         return Result.success()
     }
@@ -68,13 +70,13 @@ class DailyHealthCheckWorker(context: Context, params: WorkerParameters) : Corou
     override suspend fun doWork(): Result {
         val container = (applicationContext as PetPulseApp).container
         val repo = container.repository
-        val today = LocalDate.now()
+        val today = today()
 
         val vaccines = container.db.health().allVaccinations().map { it.toModel() }
         vaccines.groupBy { it.petId }.forEach { (petId, list) ->
             val due = VaccineTracker.latestByName(list).filter {
                 val s = VaccineTracker.status(it, today)
-                s == VaccineStatus.OVERDUE || (s == VaccineStatus.DUE_SOON && it.dueOn == today.plusDays(VaccineTracker.DUE_SOON_DAYS))
+                s == VaccineStatus.OVERDUE || (s == VaccineStatus.DUE_SOON && it.dueOn == today.plus(VaccineTracker.DUE_SOON_DAYS, DateTimeUnit.DAY))
             }
             if (due.isNotEmpty()) {
                 val pet = repo.getPet(petId)
@@ -83,7 +85,7 @@ class DailyHealthCheckWorker(context: Context, params: WorkerParameters) : Corou
                     Notifications.base(
                         applicationContext, Notifications.CHANNEL_HEALTH,
                         "${pet?.name ?: "Your pet"} has vaccines due",
-                        due.joinToString { "${it.name} (${it.dueOn})" },
+                        due.joinToString { "${it.name} (${it.dueOn?.pretty()})" },
                     ).setContentIntent(Notifications.openAppIntent(applicationContext, petId)),
                 )
             }
