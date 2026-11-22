@@ -18,7 +18,7 @@ Open the folder in Android Studio (Ladybug or newer), let Gradle sync, run the `
 configuration on an emulator or phone (Android 8.0+). Or from a terminal with the Android SDK:
 
 ```
-./gradlew :core:test :app:assembleDebug
+./gradlew :core:jvmTest :app:assembleDebug
 ```
 
 `scripts/test-core.sh` runs the core tests on machines without the Android SDK.
