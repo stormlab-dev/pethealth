@@ -34,3 +34,31 @@ mailbox (or change `CONTACT_EMAIL` in `web/src/site/site.ts`).
 - Have a lawyer review `terms.html` and `privacy.html` (both are marked as drafts).
 - Replace the example result and phone mockup with real screenshots when you have them.
 - Point the iPhone button at the TestFlight public link once it exists.
+
+## Hosting on AWS Amplify instead
+
+`amplify.yml` at the repo root holds the build settings, so Amplify detects them.
+
+1. AWS console → **Amplify** → Create new app → **GitHub** → authorize, then pick
+   `stormlab-dev/pethealth` and branch `main`.
+2. Tick **My app is a monorepo** and enter `web` as the root directory. Amplify then shows the
+   build settings from `amplify.yml` (build `npm run build`, output `dist`). Keep them as they are.
+3. Optional: under Advanced settings → Environment variables, add `VITE_SUPABASE_URL` and
+   `VITE_SUPABASE_ANON_KEY` once Supabase exists.
+4. **Save and deploy.** Open the `https://main.<id>.amplifyapp.com` link it gives you and check
+   the site and `/app/`.
+5. **Custom domain:** Amplify → Hosting → Custom domains → Add domain → `cutefamilypet.com`.
+   Pick "Manual configuration" since the domain is at GoDaddy. Amplify lists DNS records to add at
+   GoDaddy:
+   - a CNAME used to verify the SSL certificate (name like `_abc123.cutefamilypet.com`)
+   - CNAME `www` → the `xxxx.cloudfront.net` value Amplify shows. This **replaces** the
+     `www → stormlab-dev.github.io` record.
+   - For the bare domain, GoDaddy can't point `@` at CloudFront, so in GoDaddy use **Forwarding** →
+     forward `cutefamilypet.com` to `https://www.cutefamilypet.com` (permanent, 301), and remove
+     the four `185.199.x.153` A records. Or move the domain's DNS to Route 53, which supports the
+     bare domain directly.
+6. When `https://www.cutefamilypet.com` loads from Amplify, remove the custom domain in GitHub →
+   Settings → Pages. The GitHub Pages copy keeps building until then and is harmless afterwards.
+
+Cost: Amplify charges about $0.01 per build minute and $0.15 per GB served, with a free tier for
+the first 12 months. A small site like this typically costs well under $5 a month.
