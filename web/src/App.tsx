@@ -5,6 +5,7 @@ import type { Pet } from "./lib/types";
 import { PetDetail, PetForm, speciesEmoji } from "./components/Pets";
 import { ageYears } from "./lib/health";
 import { PlansScreen } from "./components/Plans";
+import { AdSlot } from "./components/AdSlot";
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -111,6 +112,7 @@ function Home() {
           </div>
         );
       })}
+      <AdSlot />
     </main>
   );
 }
