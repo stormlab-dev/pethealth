@@ -8,7 +8,8 @@ struct PetPulseApp: App {
     let container: ModelContainer = {
         do {
             return try ModelContainer(for: PetRecord.self, SymptomRecord.self, WeightRecord.self, VaccineRecord.self,
-                                      MedicationRecord.self, DoseRecord.self, AppointmentRecord.self, ClinicLinkRecord.self)
+                                      MedicationRecord.self, DoseRecord.self, AppointmentRecord.self, ClinicLinkRecord.self,
+                                      MediaRecord.self)
         } catch {
             fatalError("Could not open the CuteFamilyPet database: \(error)")
         }
@@ -18,6 +19,8 @@ struct PetPulseApp: App {
         WindowGroup {
             PetListView()
                 .task {
+                    await PlanStore.shared.start()
+                    MediaFiles.pruneOrphans(keeping: (try? container.mainContext.fetch(FetchDescriptor<MediaRecord>()))?.map(\.fileName) ?? [])
                     Reminders.shared.container = container
                     await Reminders.shared.requestPermission()
                     await Reminders.shared.rescheduleAll()

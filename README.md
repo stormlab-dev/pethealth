@@ -58,3 +58,9 @@ All partners are demo implementations. See `docs/INTEGRATIONS.md` for which real
 
 Triage is rule-based general guidance from widely published veterinary red flags, not a
 diagnosis. Have a veterinarian review the rules before launch.
+
+## More docs
+
+- [Website and custom domain](docs/WEBSITE.md)
+- [AI symptom checker with photo analysis](docs/AI_SYMPTOM_CHECKER.md)
+- [Plans, in-app purchases and extras](docs/MONETIZATION.md)

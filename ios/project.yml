@@ -20,9 +20,15 @@ targets:
         CFBundleDisplayName: CuteFamilyPet
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # Optional cloud settings (AI symptom checks). Set CFP_SUPABASE_URL and CFP_SUPABASE_ANON_KEY
+        # in the build settings or an xcconfig; empty keeps the app offline.
+        CFPSupabaseURL: $(CFP_SUPABASE_URL)
+        CFPSupabaseAnonKey: $(CFP_SUPABASE_ANON_KEY)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cutefamilypet.app
+        CFP_SUPABASE_URL: ""
+        CFP_SUPABASE_ANON_KEY: ""
         # Shared Kotlin core, built by the script below into core/build/xcode-frameworks.
         FRAMEWORK_SEARCH_PATHS: "$(SRCROOT)/../core/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
         OTHER_LDFLAGS: ["$(inherited)", "-framework", "PetPulseCore"]
