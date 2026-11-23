@@ -17,6 +17,8 @@ struct PlansView: View {
                     if let message { Text(message).foregroundStyle(Color.accentColor) }
                     Button("Restore purchases") { Task { await plans.restore(); message = "Purchases restored." } }
                     if plans.isDemo { Button("Reset demo") { plans.resetDemo(); message = nil } }
+                    if plans.plan == "FREE" { Text("The free plan shows small ads. Any paid plan removes them.").font(.footnote).foregroundStyle(.secondary) }
+                    if Ads.shared.privacyOptionsRequired { Button("Ad privacy choices") { Ads.shared.showPrivacyOptions() } }
                 }
                 planSection("Premium", plan: "PREMIUM", perks: ["Unlimited photos and videos, clips up to 3 minutes", "AI symptom checker with photo analysis", "Vet-ready health reports", "No ads"],
                             ids: ["cfp_premium_yearly", "cfp_premium_monthly"])
