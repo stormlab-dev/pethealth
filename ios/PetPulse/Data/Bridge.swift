@@ -4,9 +4,9 @@ import PetPulseCore
 // Converts SwiftData records into the shared Kotlin models, so triage, dose schedules,
 // refill forecasts and vaccine status all run the exact same code as on Android.
 
-typealias KDate = Kotlinx_datetimeLocalDate
-typealias KTime = Kotlinx_datetimeLocalTime
-typealias KDateTime = Kotlinx_datetimeLocalDateTime
+typealias KDate = PetPulseCore.LocalDate
+typealias KTime = PetPulseCore.LocalTime
+typealias KDateTime = PetPulseCore.LocalDateTime
 
 let core = Dates.shared
 

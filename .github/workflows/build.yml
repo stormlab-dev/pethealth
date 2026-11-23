@@ -66,3 +66,7 @@ jobs:
           cd ios
           xcodebuild -project PetPulse.xcodeproj -scheme PetPulse -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+      - name: Show exported Kotlin names (diagnostics)
+        if: failure()
+        run: |
+          find core/build/xcode-frameworks -name "PetPulseCore.h" | head -1 | xargs -I{} grep -E "swift_name\\(\"[A-Za-z_]*(LocalDate|LocalTime|Instant|Clock)[A-Za-z]*\"\\)" {} | head -40
