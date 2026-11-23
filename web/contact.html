@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact CuteFamilyPet</title>
+    <meta name="description" content="Questions, feedback, partnerships or the iPhone beta. Get in touch with CuteFamilyPet." />
+    <meta property="og:title" content="Contact CuteFamilyPet" />
+    <meta property="og:description" content="Questions, feedback, partnerships or the iPhone beta. Get in touch with CuteFamilyPet." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#2e7d6b" />
+    <link rel="icon" href="/favicon.svg" />
+    <script type="module" src="/src/site/site.ts"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="./"><img src="/favicon.svg" alt="" />CuteFamilyPet</a>
+        <button class="menu-btn" aria-label="Menu" aria-expanded="false">☰</button>
+        <nav class="nav">
+          <a href="./">Home</a>
+          <a href="./#features">Features</a>
+          <a href="./pricing.html">Pricing</a>
+          <a href="./about.html">About</a>
+          <a href="./contact.html" aria-current="page">Contact</a>
+          <a class="btn btn-primary btn-sm" href="./app/">Open the app</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <section class="hero hero-sm">
+        <div class="wrap one">
+          <div>
+            <p class="eyebrow">Contact</p>
+            <h1>We would love to hear from you.</h1>
+            <p class="lead">Questions, feedback, partnership ideas or beta sign-ups. We reply within two business days.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap grid grid-2 split">
+          <form id="contact-form" class="card" novalidate>
+            <div class="field"><label for="name">Your name</label><input id="name" name="name" autocomplete="name" required maxlength="120" /></div>
+            <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="200" /></div>
+            <div class="field"><label for="topic">Topic</label>
+              <select id="topic" name="topic">
+                <option value="question">General question</option>
+                <option value="support">App support</option>
+                <option value="beta">iPhone beta</option>
+                <option value="partnership">Vet clinic or pharmacy partnership</option>
+                <option value="press">Press</option>
+                <option value="feedback">Feedback</option>
+              </select>
+            </div>
+            <div class="field"><label for="message">Message</label><textarea id="message" name="message" rows="6" required maxlength="5000"></textarea></div>
+            <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off" /></div>
+            <button class="btn btn-primary" type="submit">Send message</button>
+            <p class="form-status" role="status" aria-live="polite"></p>
+          </form>
+          <div>
+            <article class="card">
+              <h3>Other ways to reach us</h3>
+              <p><strong>Email:</strong> <a href="mailto:hello@cutefamilypet.com">hello@cutefamilypet.com</a></p>
+              <p><strong>App support:</strong> <a href="mailto:support@cutefamilypet.com">support@cutefamilypet.com</a></p>
+              <p class="note"><strong>Pet emergency?</strong> Please do not wait for an email. Call your vet or nearest emergency animal hospital now.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt">
+        <div class="wrap prose-center">
+          <div class="center"><p class="eyebrow">FAQ</p><h2>Common questions</h2></div>
+            <details><summary>Is CuteFamilyPet free?</summary><p>Yes. The free plan covers pet profiles, health logs, reminders, the rule-based symptom checker and up to 200 photos and short videos. Premium and Family add unlimited media, AI photo checks, vet-ready reports and more.</p></details>
+            <details><summary>How do I cancel a subscription?</summary><p>Subscriptions are billed and managed by Google Play or the App Store. Cancel any time in your phone's subscription settings, and you keep Premium until the end of the period you paid for.</p></details>
+            <details><summary>Does the symptom checker replace my vet?</summary><p>No. It gives general guidance about urgency so you can decide what to do next. It cannot examine your pet or make a diagnosis. If you are worried, call your vet.</p></details>
+            <details><summary>What happens to the photos I use for an AI check?</summary><p>The photo is sent securely to our AI service for that one check and the result comes back to your app. It is not used to train AI models.</p></details>
+            <details><summary>Can I share my pet's records with family or a pet sitter?</summary><p>Yes. Once you sign in to sync, invite people as a caregiver (can log doses and symptoms) or viewer (read only).</p></details>
+            <details><summary>Which vet clinics and pharmacies are supported?</summary><p>We are adding partners now. If you would like your clinic or pharmacy connected, tell us below.</p></details>
+            <details><summary>When is the iPhone app coming?</summary><p>It is in testing now. Choose "iPhone beta" in the form to be invited to TestFlight.</p></details>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <div>
+          <a class="brand" href="./"><img src="/favicon.svg" alt="" />CuteFamilyPet</a>
+          <p>Health tracking for the whole furry, feathered and scaly family.</p>
+          <p>© <span data-year>2026</span> CuteFamilyPet. Not a substitute for a veterinarian.</p>
+        </div>
+        <nav aria-label="Footer">
+          <a href="./pricing.html">Pricing</a>
+          <a href="./about.html">About</a>
+          <a href="./contact.html">Contact</a>
+          <a href="./terms.html">Terms</a>
+          <a href="./privacy.html">Privacy</a>
+          <a href="./app/">Web app</a>
+          <a href="https://github.com/stormlab-dev/pethealth/releases/latest/download/cutefamilypet-debug.apk">Android download</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

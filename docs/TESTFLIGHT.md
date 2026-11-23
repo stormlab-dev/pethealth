@@ -15,7 +15,7 @@ free TestFlight app and tap an invite link. Builds expire after 90 days.
 
 1. **Enroll** at developer.apple.com/programs.
 2. **Create the app record** in App Store Connect → Apps → "+" → New App. Bundle ID
-   `com.petpulse.app` (or your own, then update `ios/project.yml`). Pick the final name early;
+   `com.cutefamilypet.app` (or your own, then update `ios/project.yml`). Pick the final name early;
    names are unique across the App Store.
 3. **Build and upload from the Mac**:
    ```

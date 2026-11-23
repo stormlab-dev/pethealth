@@ -1,6 +1,6 @@
 # Pharmacy and vet clinic integrations
 
-PetPulse talks to partners only through two interfaces in `:core`, so a real partner is a new
+CuteFamilyPet talks to partners only through two interfaces in `:core`, so a real partner is a new
 class plus one line in `AppContainer`:
 
 | Interface | Mock (ships today) | What it does |

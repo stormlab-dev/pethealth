@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { aiAvailable, aiTriage, AiError, type AiTriageResult } from "../lib/ai";
+import { getCustomer, LIMITS, type Plan } from "../lib/plans";
+import { MediaTab } from "./Media";
 import { store, type ChildTable, type Tables } from "../lib/store";
 import { DISCLAIMER, HEADLINES, triage, type TriageResult } from "../lib/triage";
 import { ageYears, dueOn, latestByName, todayIso, vaccineStatus, weightTrend, type VaccineStatus } from "../lib/health";
@@ -68,9 +71,9 @@ export function PetForm({ initial, onSaved, onCancel, onDeleted }: { initial?: P
 
 // ---------------------------------------------------------------- Pet detail
 
-const TABS = ["Overview", "Symptoms", "Weight", "Vaccines", "Meds"] as const;
+const TABS = ["Overview", "Symptoms", "Photos", "Weight", "Vaccines", "Meds"] as const;
 
-export function PetDetail({ pet, onBack, onEdit }: { pet: Pet; onBack: () => void; onEdit: () => void }) {
+export function PetDetail({ pet, onBack, onEdit, onPlans }: { pet: Pet; onBack: () => void; onEdit: () => void; onPlans: () => void }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const symptoms = useRows("symptom_entries", pet.id);
   const weights = useRows("weights", pet.id);
@@ -106,13 +109,13 @@ export function PetDetail({ pet, onBack, onEdit }: { pet: Pet; onBack: () => voi
             {meds.rows.map((m) => <div key={m.id} className="list-item"><span className="grow">{m.name}, {m.dosage}</span><span className="muted">{scheduleLabel(m)}</span></div>)}
             {meds.rows.length === 0 && <p className="muted">None.</p>}
           </div>
-          <SymptomChecker pet={pet} recent={symptoms.rows.map((s) => s.symptoms)} weightChange={trend?.changePercent ?? null} onSave={symptoms.add} />
+          <SymptomChecker pet={pet} recent={symptoms.rows.map((s) => s.symptoms)} weightChange={trend?.changePercent ?? null} weightKg={trend?.latestKg ?? weights.rows.at(-1)?.kilograms ?? null} onSave={symptoms.add} onPlans={onPlans} />
         </>
       )}
 
       {tab === "Symptoms" && (
         <>
-          <SymptomChecker pet={pet} recent={symptoms.rows.map((s) => s.symptoms)} weightChange={trend?.changePercent ?? null} onSave={symptoms.add} />
+          <SymptomChecker pet={pet} recent={symptoms.rows.map((s) => s.symptoms)} weightChange={trend?.changePercent ?? null} weightKg={trend?.latestKg ?? weights.rows.at(-1)?.kilograms ?? null} onSave={symptoms.add} onPlans={onPlans} />
           <div className="card">
             <h3>History</h3>
             {symptoms.rows.map((s) => (
@@ -130,6 +133,7 @@ export function PetDetail({ pet, onBack, onEdit }: { pet: Pet; onBack: () => voi
         </>
       )}
 
+      {tab === "Photos" && <MediaTab pet={pet} onUpgrade={onPlans} />}
       {tab === "Weight" && <WeightTab petId={pet.id} rows={weights.rows} add={weights.add} remove={weights.remove} />}
       {tab === "Vaccines" && <VaccinesTab petId={pet.id} rows={vaccines.rows} add={vaccines.add} remove={vaccines.remove} />}
       {tab === "Meds" && <MedsTab petId={pet.id} rows={meds.rows} add={meds.add} remove={meds.remove} />}
@@ -147,23 +151,46 @@ function scheduleLabel(m: Medication) {
 
 const ONSETS = [["Just now", 0], ["A few hours ago", 4], ["About a day", 26], ["2–3 days", 48], ["A week or more", 168]] as const;
 
-function SymptomChecker({ pet, recent, weightChange, onSave }: {
-  pet: Pet; recent: string[][]; weightChange: number | null; onSave: (row: Omit<Tables["symptom_entries"], "id">) => Promise<void>;
+function SymptomChecker({ pet, recent, weightChange, weightKg, onSave, onPlans }: {
+  pet: Pet; recent: string[][]; weightChange: number | null; weightKg: number | null;
+  onSave: (row: Omit<Tables["symptom_entries"], "id">) => Promise<void>; onPlans: () => void;
 }) {
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [plan, setPlan] = useState<Plan>("FREE");
+  const [ai, setAi] = useState<AiTriageResult | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMsg, setAiMsg] = useState<{ text: string; upgrade?: boolean } | null>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
+  useEffect(() => { getCustomer().then((c) => setPlan(c.plan)); }, []);
+  useEffect(() => { if (!photo) { setPhotoUrl(null); return; } const u = URL.createObjectURL(photo); setPhotoUrl(u); return () => URL.revokeObjectURL(u); }, [photo]);
   const [sel, setSel] = useState<string[]>([]);
   const [severity, setSeverity] = useState<Severity>("MILD");
   const [onset, setOnset] = useState(0);
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<TriageResult | null>(null);
-  const toggle = (k: string) => { setSel(sel.includes(k) ? sel.filter((x) => x !== k) : [...sel, k]); setResult(null); };
+  const toggle = (k: string) => { setSel(sel.includes(k) ? sel.filter((x) => x !== k) : [...sel, k]); setResult(null); setAi(null); };
   const hours = ONSETS[onset][1];
   const assess = () => triage({ pet, symptoms: sel, severity, hoursSinceOnset: hours, ageYears: ageYears(pet.birth_date), recent: recent.slice(0, 20), recentWeightChangePercent: weightChange });
   const save = async () => {
-    const r = result ?? assess();
+    const r = ai ?? result ?? assess();
     const now = Date.now();
     await onSave({ pet_id: pet.id, symptoms: sel, severity, started_at: new Date(now - hours * 3_600_000).toISOString(), logged_at: new Date(now).toISOString(), notes: notes || null, urgency: r.urgency });
-    setSel([]); setNotes(""); setResult(null);
+    setSel([]); setNotes(""); setResult(null); setAi(null); setPhoto(null); setAiMsg(null);
   };
+  const runAi = async () => {
+    const rule = assess();
+    setResult(rule); setAiMsg(null);
+    if (!LIMITS[plan].aiPhotoCheck) { setAiMsg({ text: "AI photo checks are part of Premium. Your rule-based result is above.", upgrade: true }); return; }
+    if (!aiAvailable) { setAiMsg({ text: "Sign in to use the AI check. It runs on our secure server, so this demo shows the rule-based result only." }); return; }
+    setAiBusy(true);
+    try {
+      setAi(await aiTriage({ pet, ageYears: ageYears(pet.birth_date), weightKg, symptomLabels: sel.map(symptomLabel), severity, hoursSinceOnset: hours, notes, rule, photo }));
+    } catch (e) {
+      setAiMsg({ text: (e as Error).message, upgrade: e instanceof AiError && e.code === "UPGRADE_REQUIRED" });
+    } finally { setAiBusy(false); }
+  };
+  const shown = ai ?? result;
   const chips = (red: boolean) => SYMPTOMS.filter((s) => !!s.redFlag === red).map((s) => (
     <button key={s.key} className={"chip" + (sel.includes(s.key) ? " on" : "")} onClick={() => toggle(s.key)}>{s.label}</button>
   ));
@@ -179,16 +206,28 @@ function SymptomChecker({ pet, recent, weightChange, onSave }: {
         <div><label>Started</label><select value={onset} onChange={(e) => setOnset(Number(e.target.value))}>{ONSETS.map(([l], i) => <option key={l} value={i}>{l}</option>)}</select></div>
       </div>
       <label>Notes</label>
-      <input value={notes} onChange={(e) => setNotes(e.target.value)} />
+      <input value={notes} onChange={(e) => { setNotes(e.target.value); setAi(null); }} />
+      <div className="photo-attach">
+        {photoUrl && <img src={photoUrl} alt="Attached photo" />}
+        <button onClick={() => photoInput.current?.click()}>{photo ? "Change photo" : "📸 Add a photo"}</button>
+        {photo && <button className="link" onClick={() => { setPhoto(null); setAi(null); }}>Remove</button>}
+        <input ref={photoInput} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { setPhoto(e.target.files?.[0] ?? null); setAi(null); e.target.value = ""; }} />
+      </div>
       <div className="row" style={{ marginTop: 12 }}>
-        <button className="primary" disabled={!sel.length} onClick={() => setResult(assess())}>How urgent is this?</button>
+        <button className="primary" disabled={!sel.length} onClick={() => { setAi(null); setResult(assess()); }}>How urgent is this?</button>
+        <button disabled={(!sel.length && !photo) || aiBusy} onClick={runAi}>{aiBusy ? "Checking…" : "✨ Check with AI"}{plan === "FREE" ? " (Premium)" : ""}</button>
         <button disabled={!sel.length} onClick={save}>Save to log</button>
       </div>
-      {result && (
-        <div style={{ marginTop: 12 }}>
-          <h3 style={{ color: URGENCY_COLOR[result.urgency] }}>{HEADLINES[result.urgency]}</h3>
-          <ul>{result.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
-          {result.watchFor.length > 0 && <><strong>Watch for</strong><ul>{result.watchFor.map((r) => <li key={r}>{r}</li>)}</ul></>}
+      {aiMsg && <div className="banner" style={{ marginTop: 12 }}>{aiMsg.text} {aiMsg.upgrade && <button className="link" onClick={onPlans}>See plans</button>}</div>}
+      {shown && (
+        <div className={ai ? "ai-box" : ""} style={{ marginTop: 12 }}>
+          {ai && <p className="muted">✨ Reviewed by AI{ai.raisedByAi ? ", which raised the urgency" : ""}</p>}
+          <h3 style={{ color: URGENCY_COLOR[shown.urgency] }}>{HEADLINES[shown.urgency]}</h3>
+          <ul>{shown.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+          {ai && ai.photoFindings.length > 0 && <><strong>From the photo</strong><ul>{ai.photoFindings.map((r) => <li key={r}>{r}</li>)}</ul></>}
+          {ai?.photoQuality === "UNCLEAR" && <p className="muted">The photo was hard to read. A closer, well-lit photo may help.</p>}
+          {shown.watchFor.length > 0 && <><strong>Watch for</strong><ul>{shown.watchFor.map((r) => <li key={r}>{r}</li>)}</ul></>}
+          {ai?.note && <p className="muted">{ai.note}</p>}
           <p className="muted">{DISCLAIMER}</p>
         </div>
       )}

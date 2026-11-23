@@ -1,7 +1,10 @@
 name: Publish web app
 
-# Publishes web/ to GitHub Pages at https://<owner>.github.io/<repo>/ on every push to main.
+# Publishes web/ (the CuteFamilyPet website plus the web app at /app/) to GitHub Pages on every push to main.
 # One-time setup: repo Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Custom domain: set Settings → Pages → Custom domain to www.cutefamilypet.com, point DNS at GitHub
+# (see docs/WEBSITE.md), then add a repository variable CUSTOM_DOMAIN=www.cutefamilypet.com so the
+# site is built for the domain root instead of https://<owner>.github.io/<repo>/.
 on:
   push:
     branches: [main]
@@ -31,7 +34,7 @@ jobs:
       - name: Build
         working-directory: web
         env:
-          VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_BASE: ${{ vars.CUSTOM_DOMAIN != '' && '/' || format('/{0}/', github.event.repository.name) }}
           # Optional: add these as repository variables to sync with Supabase instead of demo mode.
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}

@@ -51,3 +51,11 @@ object Partners {
         clinics = listOf(MockVetClinicProvider()),
     )
 }
+
+/** Swift entry points for billing and AI triage. */
+object Billing {
+    fun demo(): com.petpulse.core.billing.BillingProvider = com.petpulse.core.billing.MockBillingProvider()
+    fun demoPrints(): com.petpulse.core.billing.PrintPartner = com.petpulse.core.billing.MockPrintPartner()
+    fun limits(planName: String): com.petpulse.core.billing.PlanLimits =
+        (com.petpulse.core.billing.Plan.entries.firstOrNull { it.name == planName } ?: com.petpulse.core.billing.Plan.FREE).limits
+}

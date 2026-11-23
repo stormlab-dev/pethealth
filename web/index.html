@@ -3,10 +3,157 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PetPulse</title>
+    <title>CuteFamilyPet: pet health tracker</title>
+    <meta name="description" content="CuteFamilyPet tracks your pets' symptoms, medications, vaccines, weight, photos and vet visits, with an AI symptom checker that can look at photos." />
+    <meta property="og:title" content="CuteFamilyPet: pet health tracker" />
+    <meta property="og:description" content="CuteFamilyPet tracks your pets' symptoms, medications, vaccines, weight, photos and vet visits, with an AI symptom checker that can look at photos." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#2e7d6b" />
+    <link rel="icon" href="/favicon.svg" />
+    <script type="module" src="/src/site/site.ts"></script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="./"><img src="/favicon.svg" alt="" />CuteFamilyPet</a>
+        <button class="menu-btn" aria-label="Menu" aria-expanded="false">☰</button>
+        <nav class="nav">
+          <a href="./" aria-current="page">Home</a>
+          <a href="./#features">Features</a>
+          <a href="./pricing.html">Pricing</a>
+          <a href="./about.html">About</a>
+          <a href="./contact.html">Contact</a>
+          <a class="btn btn-primary btn-sm" href="./app/">Open the app</a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <section class="hero">
+        <div class="wrap">
+          <div>
+            <p class="eyebrow">Pet health, made simple</p>
+            <h1>Every pet in the family, healthy and happy.</h1>
+            <p class="lead">CuteFamilyPet keeps symptoms, medications, vaccines, weight, photos and vet visits in one place, and helps you decide when it is time to call the vet.</p>
+            <div class="btn-row">
+              <a class="btn btn-primary" href="./app/">Try it free in your browser</a>
+              <a class="btn btn-ghost" href="#download">Get the mobile app</a>
+            </div>
+            <div class="badges"><span>Free plan forever</span><span>Works offline</span><span>Dogs, cats, rabbits, birds and more</span></div>
+          </div>
+          <div class="phone" aria-label="Preview of the CuteFamilyPet app">
+            <div class="screen">
+              <div class="bar"><span>9:41</span><span>🐾 CuteFamilyPet</span></div>
+              <div class="pet"><div class="avatar">🐶</div><div><strong>Biscuit</strong><br /><span class="muted-s">Beagle · 4 years · 11.2 kg</span></div></div>
+              <div class="card"><strong>Symptom check</strong><br />Vomiting twice, low energy<br /><span class="pill">Call your vet today</span></div>
+              <div class="card"><strong>📸 Photo check</strong><br />Mild redness near left eye. No discharge visible.</div>
+              <div class="card"><strong>Today</strong><br />Heartworm chew · 8:00 AM <span class="pill ok">Given</span><br />Rabies booster due in 12 days</div>
+              <div class="card"><strong>Moments</strong>
+                <div class="thumbs"><div style="background:linear-gradient(135deg,#ffd6c9,#ffb199)"></div><div style="background:linear-gradient(135deg,#cdeee4,#8fd3c0)"></div><div style="background:linear-gradient(135deg,#ffe8a8,#ffc857)"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="wrap">
+          <div class="center">
+            <p class="eyebrow">Features</p>
+            <h2>Everything your pet's health needs, in one app</h2>
+            <p class="lead">Built for busy households with one pet or a whole menagerie.</p>
+          </div>
+          <div class="grid grid-3">
+          <article class="card"><div class="icon" aria-hidden="true">🩺</div><h3>Symptom checker</h3><p class="muted">Log what you see and get a clear urgency level, from "keep an eye on it" to "call your vet now", with the reasons spelled out.</p></article>
+          <article class="card"><div class="icon" aria-hidden="true">📸</div><h3>AI photo check</h3><p class="muted">Premium. Snap a photo of a rash, eye, wound or stool. Our AI describes what it sees and folds it into the triage, never rating lower than our safety rules.</p></article>
+          <article class="card"><div class="icon" aria-hidden="true">💊</div><h3>Medication reminders</h3><p class="muted">Daily, every few days or as needed. Log each dose and get a heads-up before refills run out.</p></article>
+          <article class="card"><div class="icon" aria-hidden="true">💉</div><h3>Vaccines on schedule</h3><p class="muted">See what is due, overdue or up to date for each pet, and get reminded before the date.</p></article>
+          <article class="card"><div class="icon" aria-hidden="true">⚖️</div><h3>Weight trends</h3><p class="muted">Track weight over time and spot gradual gains or losses that are easy to miss.</p></article>
+          <article class="card"><div class="icon" aria-hidden="true">🎞️</div><h3>Photos and videos</h3><p class="muted">Keep every pet's moments and health snapshots together, and share them with family or your vet in a tap.</p></article>
+          <article class="card"><div class="icon" aria-hidden="true">🏥</div><h3>Vet clinic links</h3><p class="muted">Connect your clinic to import records and request appointments, where your clinic supports it.</p></article>
+          <article class="card"><div class="icon" aria-hidden="true">🛒</div><h3>Pharmacy refills</h3><p class="muted">Compare prices and order refills from partner pharmacies without retyping prescriptions.</p></article>
+          <article class="card"><div class="icon" aria-hidden="true">👨‍👩‍👧</div><h3>Shared with family</h3><p class="muted">Invite a partner, pet sitter or dog walker as a caregiver or viewer, so everyone sees the same records.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt">
+        <div class="wrap">
+          <div class="center">
+            <p class="eyebrow">How it works</p>
+            <h2>Up and running in two minutes</h2>
+          </div>
+          <ol class="steps">
+            <li><h3>Add your pets</h3><p class="muted">Name, species, breed, birthday and weight. Add a photo while you are at it.</p></li>
+            <li><h3>Log what matters</h3><p class="muted">Meds, vaccines, weigh-ins and symptoms. Reminders take care of the rest.</p></li>
+            <li><h3>Check and share</h3><p class="muted">Run a symptom check when something seems off, and share records, photos or videos with your vet.</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap grid grid-2 split">
+          <div>
+            <p class="eyebrow">AI symptom checker</p>
+            <h2>A second pair of eyes when something looks wrong</h2>
+            <p>Describe the symptoms, add a photo, and CuteFamilyPet gives you an urgency level with plain-language reasons and what to watch for next.</p>
+            <ul class="checks">
+              <li>Safety rules run first and catch emergencies instantly, even offline.</li>
+              <li>The AI can raise the urgency based on the photo, but never lower it.</li>
+              <li>Your photo is used only for that check and is not used to train AI models.</li>
+            </ul>
+            <p class="note">CuteFamilyPet gives general guidance, not a diagnosis. If you are worried, call your vet or an emergency animal hospital.</p>
+          </div>
+          <div class="card triage-demo">
+            <p class="eyebrow">Example result</p>
+            <h3>Call your vet today</h3>
+            <p><strong>Why:</strong> Vomiting more than once in a day plus low energy in an adult dog.</p>
+            <p><strong>From the photo:</strong> Gums look pink and moist, which is reassuring.</p>
+            <p><strong>Go to an emergency vet if:</strong> vomiting continues, there is blood, the belly looks swollen, or Biscuit cannot keep water down.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="download" class="section alt">
+        <div class="wrap">
+          <div class="center">
+            <p class="eyebrow">Download</p>
+            <h2>Use it on any device</h2>
+          </div>
+          <div class="grid grid-3">
+            <article class="card"><div class="icon" aria-hidden="true">🤖</div><h3>Android</h3><p class="muted">Install the test build on your phone. You may need to allow installs from your browser.</p><a class="btn btn-primary" href="https://github.com/stormlab-dev/pethealth/releases/latest/download/cutefamilypet-debug.apk">Download for Android</a></article>
+            <article class="card"><div class="icon" aria-hidden="true">🍎</div><h3>iPhone</h3><p class="muted">Coming soon on TestFlight, then the App Store. Ask to join the beta.</p><a class="btn btn-ghost" href="./contact.html?topic=beta">Join the iPhone beta</a></article>
+            <article class="card"><div class="icon" aria-hidden="true">💻</div><h3>Web</h3><p class="muted">Nothing to install. Your data stays in your browser until you sign in to sync.</p><a class="btn btn-ghost" href="./app/">Open the web app</a></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="cta">
+            <div><h2>Give your pets the care they deserve.</h2><p>Start on the free plan. No account or card needed.</p></div>
+            <a class="btn btn-primary" href="./app/">Get started</a>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <div>
+          <a class="brand" href="./"><img src="/favicon.svg" alt="" />CuteFamilyPet</a>
+          <p>Health tracking for the whole furry, feathered and scaly family.</p>
+          <p>© <span data-year>2026</span> CuteFamilyPet. Not a substitute for a veterinarian.</p>
+        </div>
+        <nav aria-label="Footer">
+          <a href="./pricing.html">Pricing</a>
+          <a href="./about.html">About</a>
+          <a href="./contact.html">Contact</a>
+          <a href="./terms.html">Terms</a>
+          <a href="./privacy.html">Privacy</a>
+          <a href="./app/">Web app</a>
+          <a href="https://github.com/stormlab-dev/pethealth/releases/latest/download/cutefamilypet-debug.apk">Android download</a>
+        </nav>
+      </div>
+    </footer>
   </body>
 </html>

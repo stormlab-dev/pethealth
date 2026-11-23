@@ -1,7 +1,7 @@
 # XcodeGen spec. On a Mac:  brew install xcodegen && cd ios && xcodegen && open PetPulse.xcodeproj
 name: PetPulse
 options:
-  bundleIdPrefix: com.petpulse
+  bundleIdPrefix: com.cutefamilypet
   deploymentTarget:
     iOS: "17.0"
 settings:
@@ -17,12 +17,12 @@ targets:
     info:
       path: PetPulse/Info.plist
       properties:
-        CFBundleDisplayName: PetPulse
+        CFBundleDisplayName: CuteFamilyPet
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.petpulse.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.cutefamilypet.app
         # Shared Kotlin core, built by the script below into core/build/xcode-frameworks.
         FRAMEWORK_SEARCH_PATHS: "$(SRCROOT)/../core/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
         OTHER_LDFLAGS: ["$(inherited)", "-framework", "PetPulseCore"]

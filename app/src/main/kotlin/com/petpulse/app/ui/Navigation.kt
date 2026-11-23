@@ -11,6 +11,7 @@ import com.petpulse.app.ui.screens.*
 
 object Routes {
     const val PETS = "pets"
+    const val PLANS = "plans"
     fun editPet(id: Long? = null) = "pet/edit?id=${id ?: -1}"
     fun pet(id: Long) = "pet/$id"
     fun logSymptoms(petId: Long) = "pet/$petId/symptoms"
@@ -28,8 +29,9 @@ fun PetPulseNavHost(startPetId: Long?) {
 
     NavHost(nav, startDestination = Routes.PETS) {
         composable(Routes.PETS) {
-            PetListScreen(onOpen = { nav.navigate(Routes.pet(it)) }, onAdd = { nav.navigate(Routes.editPet()) })
+            PetListScreen(onOpen = { nav.navigate(Routes.pet(it)) }, onAdd = { nav.navigate(Routes.editPet()) }, onPlans = { nav.navigate(Routes.PLANS) })
         }
+        composable(Routes.PLANS) { PlansScreen(onBack = { nav.popBackStack() }) }
         composable("pet/edit?id={id}", arguments = listOf(optLong("id"))) { e ->
             PetEditScreen(
                 petId = e.arguments!!.getLong("id").orNull(),
@@ -47,6 +49,7 @@ fun PetPulseNavHost(startPetId: Long?) {
                 onEditMed = { nav.navigate(Routes.editMed(petId, it)) },
                 onPharmacy = { nav.navigate(Routes.pharmacy(petId, it)) },
                 onVet = { nav.navigate(Routes.vet(petId, it)) },
+                onPlans = { nav.navigate(Routes.PLANS) },
             )
         }
         composable("pet/{petId}/symptoms", arguments = listOf(petArg)) { e ->
@@ -55,6 +58,7 @@ fun PetPulseNavHost(startPetId: Long?) {
                 petId = petId,
                 onDone = { nav.popBackStack() },
                 onBookVet = { reason -> nav.navigate(Routes.vet(petId, reason)) { popUpTo("pet/{petId}") } },
+                onPlans = { nav.navigate(Routes.PLANS) },
             )
         }
         composable("pet/{petId}/med?medId={medId}", arguments = listOf(petArg, optLong("medId"))) { e ->

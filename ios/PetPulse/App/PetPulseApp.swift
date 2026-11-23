@@ -10,7 +10,7 @@ struct PetPulseApp: App {
             return try ModelContainer(for: PetRecord.self, SymptomRecord.self, WeightRecord.self, VaccineRecord.self,
                                       MedicationRecord.self, DoseRecord.self, AppointmentRecord.self, ClinicLinkRecord.self)
         } catch {
-            fatalError("Could not open the PetPulse database: \(error)")
+            fatalError("Could not open the CuteFamilyPet database: \(error)")
         }
     }()
 
