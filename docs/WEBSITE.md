@@ -17,9 +17,8 @@ to `main` (`.github/workflows/web-pages.yml`).
    The apex records make `cutefamilypet.com` redirect to `www`.
 2. **GitHub** → repo Settings → Pages → Custom domain: `www.cutefamilypet.com` → Save. When the
    DNS check passes, tick **Enforce HTTPS** (the certificate can take up to an hour).
-3. **GitHub** → Settings → Secrets and variables → Actions → Variables → New variable:
-   `CUSTOM_DOMAIN` = `www.cutefamilypet.com`. Then re-run "Publish web app" (Actions tab). This
-   builds the site for the domain root instead of `/pethealth/`.
+3. **GitHub** → Actions → "Publish web app" → Run workflow. The build reads the custom domain
+   from Pages and builds the site for the domain root instead of `/pethealth/`.
 4. Optional but recommended: Settings → Pages → verify the domain for your account/org, which
    stops anyone else claiming it on GitHub Pages.
 
