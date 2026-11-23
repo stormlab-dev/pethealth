@@ -68,7 +68,10 @@ enum AiTriageClient {
         let age = PetAge.shared.years(birthDate: pet.birthDate, today: core.today())?.doubleValue
         let weight = pet.weights.max { $0.epochDay < $1.epochDay }?.kilograms
         var body: [String: Any] = [
-            "pet": ["species": pet.species, "sex": pet.sex, "breed": pet.breed ?? NSNull(), "ageYears": age ?? NSNull(), "weightKg": weight ?? NSNull()],
+            "pet": ["species": pet.species, "sex": pet.sex,
+                    "breed": pet.breed.map { $0 as Any } ?? NSNull(),
+                    "ageYears": age.map { $0 as Any } ?? NSNull(),
+                    "weightKg": weight.map { $0 as Any } ?? NSNull()] as [String: Any],
             "symptoms": symptomLabels, "severity": severity, "hoursSinceOnset": hoursSinceOnset, "notes": notes,
             "ruleResult": ["urgency": rule.urgency.name, "reasons": rule.reasons, "watchFor": rule.watchFor],
         ]
