@@ -25,6 +25,7 @@ class MainActivity : ComponentActivity() {
         }
         val container = (application as PetPulseApp).container
         container.billing.attach(this)
+        com.petpulse.app.ads.Ads.start(this)
         lifecycleScope.launch {
             container.billing.refresh()
             container.media.pruneOrphans()

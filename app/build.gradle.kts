@@ -22,6 +22,13 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"${cfg("CFP_SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${cfg("CFP_SUPABASE_ANON_KEY")}\"")
         buildConfigField("String", "REVENUECAT_ANDROID_KEY", "\"${cfg("CFP_REVENUECAT_ANDROID_KEY")}\"")
+
+        // AdMob (free plan only). Defaults are Google's public test ids, which show "Test Ad"
+        // banners and earn nothing; set your own for release builds.
+        val admobApp = cfg("CFP_ADMOB_APP_ID").ifEmpty { "ca-app-pub-3940256099942544~3347511713" }
+        val admobBanner = cfg("CFP_ADMOB_BANNER_ID").ifEmpty { "ca-app-pub-3940256099942544/9214589741" }
+        manifestPlaceholders["admobAppId"] = admobApp
+        buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBanner\"")
     }
 
     buildTypes {
@@ -70,6 +77,8 @@ dependencies {
 
     implementation(libs.work.runtime.ktx)
     implementation(libs.revenuecat)
+    implementation(libs.play.services.ads)
+    implementation(libs.ump)
 
     testImplementation(libs.junit)
 }

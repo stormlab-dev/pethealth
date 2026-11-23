@@ -61,9 +61,14 @@ fun PlansScreen(onBack: () -> Unit) {
                     s.expiresAt?.let { Text((if (s.inTrial) "Trial ends " else "Renews or ends ") + it.toLocalDateTime(TimeZone.currentSystemDefault()).date.pretty(), style = MaterialTheme.typography.bodySmall) }
                     if (vm.isDemo) Text("Demo store: purchases are simulated and nothing is charged.", style = MaterialTheme.typography.bodySmall)
                     vm.message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
+                    if (s.plan == Plan.FREE) Text("The free plan shows small ads. Any paid plan removes them.", style = MaterialTheme.typography.bodySmall)
                     Row {
                         TextButton(onClick = { vm.restore() }) { Text("Restore purchases") }
                         if (vm.isDemo) TextButton(onClick = { vm.resetDemo() }) { Text("Reset demo") }
+                    }
+                    val activity = androidx.compose.ui.platform.LocalContext.current as? android.app.Activity
+                    if (activity != null && com.petpulse.app.ads.Ads.privacyOptionsRequired(activity)) {
+                        TextButton(onClick = { com.petpulse.app.ads.Ads.showPrivacyOptions(activity) }) { Text("Ad privacy choices") }
                     }
                 }
             }
