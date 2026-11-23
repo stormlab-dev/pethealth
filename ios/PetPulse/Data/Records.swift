@@ -21,6 +21,7 @@ import SwiftData
     @Relationship(deleteRule: .cascade, inverse: \MedicationRecord.pet) var medications: [MedicationRecord] = []
     @Relationship(deleteRule: .cascade, inverse: \AppointmentRecord.pet) var appointments: [AppointmentRecord] = []
     @Relationship(deleteRule: .cascade, inverse: \ClinicLinkRecord.pet) var clinicLink: ClinicLinkRecord?
+    @Relationship(deleteRule: .cascade, inverse: \MediaRecord.pet) var media: [MediaRecord] = []
 
     init(name: String, species: String = "DOG", sex: String = "UNKNOWN") {
         self.name = name
@@ -149,4 +150,25 @@ import SwiftData
         self.reason = reason
         self.status = status
     }
+}
+
+/// A photo or video of a pet. The file lives in Documents/media/<fileName>.
+@Model final class MediaRecord {
+    var uid: Int64 = Int64.random(in: 1...Int64.max)
+    var pet: PetRecord?
+    var kind: String          // PHOTO or VIDEO
+    var fileName: String
+    var durationSec: Int?
+    var caption: String?
+    var takenAtMillis: Int64
+
+    init(kind: String, fileName: String, durationSec: Int?, takenAtMillis: Int64) {
+        self.kind = kind
+        self.fileName = fileName
+        self.durationSec = durationSec
+        self.takenAtMillis = takenAtMillis
+    }
+
+    var url: URL { MediaFiles.directory.appendingPathComponent(fileName) }
+    var isVideo: Bool { kind == "VIDEO" }
 }

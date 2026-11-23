@@ -10,11 +10,18 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.petpulse.app"
+        applicationId = "com.cutefamilypet.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "0.2.0"
+
+        // Optional cloud and billing keys: set as gradle properties (~/.gradle/gradle.properties)
+        // or environment variables. Left empty, the app runs offline with demo purchases.
+        fun cfg(name: String) = (project.findProperty(name) as String?) ?: System.getenv(name) ?: ""
+        buildConfigField("String", "SUPABASE_URL", "\"${cfg("CFP_SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${cfg("CFP_SUPABASE_ANON_KEY")}\"")
+        buildConfigField("String", "REVENUECAT_ANDROID_KEY", "\"${cfg("CFP_REVENUECAT_ANDROID_KEY")}\"")
     }
 
     buildTypes {
@@ -32,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -61,6 +69,7 @@ dependencies {
     ksp(libs.room.compiler)
 
     implementation(libs.work.runtime.ktx)
+    implementation(libs.revenuecat)
 
     testImplementation(libs.junit)
 }

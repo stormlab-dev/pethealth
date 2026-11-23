@@ -20,7 +20,7 @@ data class TriageResult(
 ) {
     companion object {
         const val DISCLAIMER =
-            "PetPulse gives general guidance, not a diagnosis. If you are worried, call your vet. " +
+            "CuteFamilyPet gives general guidance, not a diagnosis. If you are worried, call your vet. " +
                 "In an emergency, go to the nearest emergency clinic."
     }
 }

@@ -69,7 +69,7 @@ class PetDetailViewModel(private val c: AppContainer, val petId: Long) : ViewMod
     }
 }
 
-private enum class Tab(val label: String) { OVERVIEW("Overview"), SYMPTOMS("Symptoms"), WEIGHT("Weight"), VACCINES("Vaccines"), MEDS("Meds"), VET("Vet") }
+private enum class Tab(val label: String) { OVERVIEW("Overview"), SYMPTOMS("Symptoms"), PHOTOS("Photos"), WEIGHT("Weight"), VACCINES("Vaccines"), MEDS("Meds"), VET("Vet") }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +81,7 @@ fun PetDetailScreen(
     onEditMed: (Long?) -> Unit,
     onPharmacy: (Long?) -> Unit,
     onVet: (String) -> Unit,
+    onPlans: () -> Unit,
 ) {
     val vm = appViewModel { PetDetailViewModel(it, petId) }
     val pet by vm.pet.collectAsStateWithLifecycle()
@@ -110,6 +111,7 @@ fun PetDetailScreen(
             when (tab) {
                 Tab.OVERVIEW -> OverviewTab(vm, p, onLogSymptoms, onVet)
                 Tab.SYMPTOMS -> SymptomsTab(vm)
+                Tab.PHOTOS -> MediaTab(petId, p.name, onPlans)
                 Tab.WEIGHT -> WeightTab(vm)
                 Tab.VACCINES -> VaccinesTab(vm)
                 Tab.MEDS -> MedsTab(vm, onEditMed, onPharmacy)
@@ -187,7 +189,7 @@ private fun OverviewTab(vm: PetDetailViewModel, pet: Pet, onLogSymptoms: () -> U
 @Composable
 private fun SymptomsTab(vm: PetDetailViewModel) {
     val entries by vm.symptoms.collectAsStateWithLifecycle()
-    if (entries.isEmpty()) return EmptyState("Log symptoms when something seems off. PetPulse will tell you how urgent it looks, and the history helps your vet.")
+    if (entries.isEmpty()) return EmptyState("Log symptoms when something seems off. CuteFamilyPet will tell you how urgent it looks, and the history helps your vet.")
     TabList {
         items(entries, key = { it.first.id }) { (e, urgency) ->
             SectionCard(

@@ -10,7 +10,7 @@ export const HEADLINES: Record<Urgency, string> = {
 };
 
 export const DISCLAIMER =
-  "PetPulse gives general guidance, not a diagnosis. If you are worried, call your vet. " +
+  "CuteFamilyPet gives general guidance, not a diagnosis. If you are worried, call your vet. " +
   "In an emergency, go to the nearest emergency clinic.";
 
 const ORDER: Urgency[] = ["EMERGENCY", "SEE_VET_24H", "BOOK_VISIT", "MONITOR"];

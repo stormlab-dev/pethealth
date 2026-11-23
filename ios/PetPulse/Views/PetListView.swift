@@ -5,6 +5,7 @@ import PetPulseCore
 struct PetListView: View {
     @Query(sort: \PetRecord.name) private var pets: [PetRecord]
     @State private var adding = false
+    @State private var showPlans = false
 
     var body: some View {
         NavigationStack {
@@ -30,8 +31,12 @@ struct PetListView: View {
             }
             .navigationTitle("My pets")
             .navigationDestination(for: PetRecord.self) { PetDetailView(pet: $0) }
-            .toolbar { Button("Add pet", systemImage: "plus") { adding = true } }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) { Button("Plans", systemImage: "star") { showPlans = true } }
+                ToolbarItem(placement: .primaryAction) { Button("Add pet", systemImage: "plus") { adding = true } }
+            }
             .sheet(isPresented: $adding) { PetEditView(pet: nil) }
+            .sheet(isPresented: $showPlans) { PlansView() }
         }
     }
 }

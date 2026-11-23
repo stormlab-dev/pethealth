@@ -1,4 +1,4 @@
--- PetPulse cloud schema (Supabase / Postgres).
+-- CuteFamilyPet cloud schema (Supabase / Postgres).
 -- Mirrors the Android Room schema. Every row carries updated_at + deleted_at so clients can
 -- sync incrementally ("give me everything changed since T") and propagate deletes.
 -- Access: a pet is visible to everyone in pet_members (owner, family, pet sitter).

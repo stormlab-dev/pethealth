@@ -45,6 +45,8 @@ class PetRepository(private val db: PetPulseDatabase, private val triage: Triage
         return triage.assess(entry, ctx)
     }
 
+    suspend fun latestWeightKg(petId: Long): Double? = db.health().weights(petId).maxByOrNull { it.epochDay }?.kilograms
+
     suspend fun logSymptoms(entry: SymptomEntry, result: TriageResult?): Long =
         db.health().insertSymptom(entry.toEntity(result?.urgency?.name))
 

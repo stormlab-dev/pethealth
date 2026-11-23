@@ -1,4 +1,4 @@
-# PetPulse
+# CuteFamilyPet
 
 Pet health tracker: pet profiles, symptom log with triage ("does this need a vet?"), weight,
 vaccines, medication reminders and refill alerts, plus pharmacy and vet clinic integrations.
@@ -31,7 +31,7 @@ Details in `ios/README.md`.
 ## Try it on your phone or in a browser
 
 - **Android:** every build of `main` publishes a test APK under Releases:
-  `https://github.com/stormlab-dev/pethealth/releases/latest/download/petpulse-debug.apk`
+  `https://github.com/stormlab-dev/pethealth/releases/latest/download/cutefamilypet-debug.apk`
 - **Web:** published to `https://stormlab-dev.github.io/pethealth/` on every push to `main`
   (one-time: Settings → Pages → Source: GitHub Actions).
 - **iPhone:** see `docs/TESTFLIGHT.md`.
@@ -58,3 +58,9 @@ All partners are demo implementations. See `docs/INTEGRATIONS.md` for which real
 
 Triage is rule-based general guidance from widely published veterinary red flags, not a
 diagnosis. Have a veterinarian review the rules before launch.
+
+## More docs
+
+- [Website and custom domain](docs/WEBSITE.md)
+- [AI symptom checker with photo analysis](docs/AI_SYMPTOM_CHECKER.md)
+- [Plans, in-app purchases and extras](docs/MONETIZATION.md)

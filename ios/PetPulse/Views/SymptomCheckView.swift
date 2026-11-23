@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 import PetPulseCore
 
 private let redFlagKeys: Set<String> = ["breathing", "collapse", "seizure", "pale_gums", "toxin", "trauma", "retching",
@@ -16,6 +17,13 @@ struct SymptomCheckView: View {
     @State private var notes = ""
     @State private var result: TriageResult?
     @State private var bookVet = false
+    @ObservedObject private var plans = PlanStore.shared
+    @State private var photoItem: PhotosPickerItem?
+    @State private var photoData: Data?
+    @State private var ai: AiTriageResult?
+    @State private var aiBusy = false
+    @State private var aiMessage: String?
+    @State private var showPlans = false
 
     var body: some View {
         NavigationStack {
@@ -32,9 +40,54 @@ struct SymptomCheckView: View {
                     TextField("Notes (what, how often, anything they ate)", text: $notes, axis: .vertical)
                 }
                 Section {
-                    Button("How urgent is this?") { result = run().1 }.disabled(selected.isEmpty)
+                    HStack {
+                        if let photoData, let img = UIImage(data: photoData) {
+                            Image(uiImage: img).resizable().scaledToFill().frame(width: 56, height: 56).clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        PhotosPicker(selection: $photoItem, matching: .images) {
+                            Label(photoData == nil ? "Add a photo" : "Change photo", systemImage: "camera")
+                        }
+                        if photoData != nil { Spacer(); Button("Remove", role: .destructive) { photoData = nil; photoItem = nil; ai = nil } }
+                    }
+                    .onChange(of: photoItem) { _, item in
+                        Task { photoData = try? await item?.loadTransferable(type: Data.self); ai = nil }
+                    }
+                } footer: { Text("A clear, close, well-lit photo of the problem area helps the AI check.") }
+                Section {
+                    Button("How urgent is this?") { ai = nil; result = run().1 }.disabled(selected.isEmpty)
+                    Button {
+                        Task { await runAi() }
+                    } label: {
+                        if aiBusy { HStack { ProgressView(); Text("Checking…") } }
+                        else { Label("Check with AI" + (plans.plan == "FREE" ? " (Premium)" : ""), systemImage: "sparkles") }
+                    }
+                    .disabled((selected.isEmpty && photoData == nil) || aiBusy)
+                    if let aiMessage {
+                        Text(aiMessage).font(.callout)
+                        if plans.plan == "FREE" { Button("See plans") { showPlans = true } }
+                    }
                 }
-                if let r = result {
+                if let a = ai {
+                    Section {
+                        Text("✨ Reviewed by AI" + (a.raisedByAi ? ", which raised the urgency" : "")).font(.caption).foregroundStyle(.secondary)
+                        Text(a.urgency.headline).font(.title3.bold()).foregroundStyle(urgencyColor(a.urgency.name))
+                        ForEach(a.reasons, id: \.self) { Text("• \($0)") }
+                        if !a.photoFindings.isEmpty {
+                            Text("From the photo").font(.headline)
+                            ForEach(a.photoFindings, id: \.self) { Text("• \($0)") }
+                        }
+                        if !a.watchFor.isEmpty {
+                            Text("Watch for").font(.headline)
+                            ForEach(a.watchFor, id: \.self) { Text("• \($0)") }
+                        }
+                        if let note = a.note { Text(note).font(.footnote) }
+                        Text(a.disclaimer).font(.caption).foregroundStyle(.secondary)
+                        if a.urgency.name == "EMERGENCY" {
+                            Button("Find the nearest emergency vet") { openURL(URL(string: "maps://?q=emergency+vet")!) }
+                                .buttonStyle(.borderedProminent).tint(.red)
+                        }
+                    }
+                } else if let r = result {
                     Section {
                         Text(r.urgency.headline).font(.title3.bold()).foregroundStyle(urgencyColor(r.urgency.name))
                         ForEach(r.reasons, id: \.self) { Text("• \($0)") }
@@ -61,6 +114,7 @@ struct SymptomCheckView: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Save") { save(); dismiss() }.disabled(selected.isEmpty) }
             }
             .sheet(isPresented: $bookVet, onDismiss: { dismiss() }) { VetView(pet: pet, reason: summary) }
+            .sheet(isPresented: $showPlans) { PlansView() }
         }
     }
 
@@ -70,6 +124,7 @@ struct SymptomCheckView: View {
                 Chip(label: s.label, selected: selected.contains(s.key)) {
                     if selected.contains(s.key) { selected.remove(s.key) } else { selected.insert(s.key) }
                     result = nil
+                    ai = nil
                 }
             }
         }
@@ -86,11 +141,31 @@ struct SymptomCheckView: View {
         return "\(labels) (\(severity.lowercased()), started \(onsets[onset].0.lowercased()))" + (notes.isEmpty ? "" : ". Notes: \(notes)")
     }
 
+    private func runAi() async {
+        let rule = run().1
+        result = rule
+        aiMessage = nil
+        guard plans.limits.aiPhotoCheck else { aiMessage = "AI photo checks are part of Premium. Your rule-based result is below."; return }
+        guard AiTriageClient.available else { aiMessage = "The AI check needs the CuteFamilyPet cloud, which isn't set up in this build yet. The rule-based result is below."; return }
+        aiBusy = true
+        defer { aiBusy = false }
+        do {
+            ai = try await AiTriageClient.check(
+                pet: pet, symptomLabels: selected.map { Symptom.companion.fromKey(key: $0).label }, severity: severity,
+                hoursSinceOnset: onsets[onset].1, notes: notes, rule: rule,
+                photoBase64: photoData.flatMap { MediaFiles.jpegBase64ForAi($0) })
+        } catch {
+            aiMessage = error.localizedDescription
+        }
+    }
+
     private func save() {
-        let (entry, r) = run()
+        let (entry, rule) = run()
+        // Keep the AI's (never lower) urgency in the history when there was one.
+        let urgencyName = ai?.urgency.name ?? rule.urgency.name
         pet.symptoms.append(SymptomRecord(symptomKeys: Array(selected), severity: severity,
                                           startedAtMillis: core.epochMillis(instant: entry.startedAt),
                                           loggedAtMillis: core.epochMillis(instant: entry.loggedAt),
-                                          notes: notes.isEmpty ? nil : notes, urgency: r.urgency.name))
+                                          notes: notes.isEmpty ? nil : notes, urgency: urgencyName))
     }
 }

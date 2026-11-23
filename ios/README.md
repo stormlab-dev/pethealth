@@ -1,4 +1,4 @@
-# PetPulse for iPhone
+# CuteFamilyPet for iPhone
 
 SwiftUI app (iOS 17+) using SwiftData for on-device storage and the shared Kotlin core
 (`../core`, Kotlin Multiplatform) for triage, dose schedules, refill forecasts, vaccine status,

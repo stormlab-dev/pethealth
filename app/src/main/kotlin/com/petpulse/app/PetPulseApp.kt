@@ -9,6 +9,10 @@ import com.petpulse.app.reminders.ReminderScheduler
 import com.petpulse.core.integrations.IntegrationRegistry
 import com.petpulse.core.integrations.pharmacy.MockPharmacyProvider
 import com.petpulse.core.integrations.vet.MockVetClinicProvider
+import com.petpulse.app.billing.AppBilling
+import com.petpulse.app.cloud.AiTriageClient
+import com.petpulse.app.cloud.CloudSession
+import com.petpulse.app.media.MediaLibrary
 import com.petpulse.core.triage.RuleBasedTriageEngine
 
 /** Manual dependency container; small enough that a DI framework isn't worth it yet. */
@@ -23,6 +27,10 @@ class AppContainer(app: Application) {
         clinics = listOf(MockVetClinicProvider()),
     )
     val reminders = ReminderScheduler(app, repository)
+    val media = MediaLibrary(app, db)
+    val cloud = CloudSession(app)
+    val ai = AiTriageClient(cloud)
+    val billing = AppBilling(app)
 }
 
 class PetPulseApp : Application() {

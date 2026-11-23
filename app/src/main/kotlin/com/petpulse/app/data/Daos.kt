@@ -124,3 +124,24 @@ interface IntegrationDao {
     @Delete
     suspend fun deleteRefillOrder(o: RefillOrderEntity)
 }
+
+@Dao
+interface MediaDao {
+    @Query("SELECT * FROM pet_media WHERE petId = :petId ORDER BY takenAtMillis DESC")
+    fun observeForPet(petId: Long): Flow<List<MediaEntity>>
+
+    @Query("SELECT COUNT(*) FROM pet_media")
+    fun observeCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM pet_media")
+    suspend fun count(): Int
+
+    @Insert
+    suspend fun insert(m: MediaEntity): Long
+
+    @Query("DELETE FROM pet_media WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("SELECT fileName FROM pet_media")
+    suspend fun allFileNames(): List<String>
+}

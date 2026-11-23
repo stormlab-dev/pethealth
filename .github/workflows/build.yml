@@ -19,21 +19,21 @@ jobs:
       - name: Unit tests and debug APK
         run: ./gradlew :core:jvmTest :app:assembleDebug --console=plain
       - name: Name the APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk petpulse-debug.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk cutefamilypet-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: petpulse-debug-apk
-          path: petpulse-debug.apk
+          name: cutefamilypet-debug-apk
+          path: cutefamilypet-debug.apk
       # Every build of main becomes a GitHub release, so the newest APK is always at
-      # https://github.com/<owner>/<repo>/releases/latest/download/petpulse-debug.apk
+      # https://github.com/<owner>/<repo>/releases/latest/download/cutefamilypet-debug.apk
       - name: Publish test APK
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-build-${{ github.run_number }}
           name: Android test build ${{ github.run_number }}
-          body: Debug build for testing. On your phone, open this page, download petpulse-debug.apk and allow installs from this source.
-          files: petpulse-debug.apk
+          body: Debug build for testing. On your phone, open this page, download cutefamilypet-debug.apk and allow installs from this source.
+          files: cutefamilypet-debug.apk
           make_latest: true
 
   web:

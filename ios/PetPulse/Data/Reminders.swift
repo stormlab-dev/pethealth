@@ -71,7 +71,7 @@ final class Reminders {
         }
         guard !lines.isEmpty else { return }
         let content = UNMutableNotificationContent()
-        content.title = "PetPulse health check"
+        content.title = "CuteFamilyPet health check"
         content.body = lines.joined(separator: "\n")
         var comps = DateComponents()
         comps.hour = 9

@@ -11,7 +11,7 @@ struct PetDetailView: View {
     @State private var editing = false
     @State private var checking = false
     @State private var confirmDelete = false
-    private let tabs = ["Overview", "Symptoms", "Weight", "Vaccines", "Meds", "Vet"]
+    private let tabs = ["Overview", "Symptoms", "Photos", "Weight", "Vaccines", "Meds", "Vet"]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,6 +20,7 @@ struct PetDetailView: View {
             List {
                 switch tab {
                 case "Symptoms": SymptomsSection(pet: pet)
+                case "Photos": MediaSection(pet: pet)
                 case "Weight": WeightSection(pet: pet)
                 case "Vaccines": VaccinesSection(pet: pet)
                 case "Meds": MedsSection(pet: pet)

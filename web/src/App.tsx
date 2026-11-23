@@ -4,6 +4,7 @@ import { store, supabase } from "./lib/store";
 import type { Pet } from "./lib/types";
 import { PetDetail, PetForm, speciesEmoji } from "./components/Pets";
 import { ageYears } from "./lib/health";
+import { PlansScreen } from "./components/Plans";
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -31,7 +32,7 @@ function SignIn() {
   };
   return (
     <main>
-      <header className="top"><h1>🐾 PetPulse</h1></header>
+      <header className="top"><h1>🐾 CuteFamilyPet</h1></header>
       <div className="card">
         <h3>Sign in</h3>
         {sent ? <p>Check your email for a sign-in link.</p> : (
@@ -55,11 +56,20 @@ function Home() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Pet | "new" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [plans, setPlans] = useState(window.location.hash === "#plans");
+  useEffect(() => {
+    const onHash = () => setPlans(window.location.hash === "#plans");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const showPlans = (on: boolean) => { window.location.hash = on ? "plans" : ""; setPlans(on); };
 
   const reload = () => store.listPets().then(setPets).catch((e) => setError(String(e.message ?? e)));
   useEffect(() => { reload(); }, []);
 
   const open = pets?.find((p) => p.id === openId);
+
+  if (plans) return <main><PlansScreen onBack={() => showPlans(false)} /></main>;
 
   if (editing) {
     return (
@@ -74,13 +84,14 @@ function Home() {
     );
   }
 
-  if (open) return <main><PetDetail pet={open} onBack={() => setOpenId(null)} onEdit={() => setEditing(open)} /></main>;
+  if (open) return <main><PetDetail pet={open} onBack={() => setOpenId(null)} onEdit={() => setEditing(open)} onPlans={() => showPlans(true)} /></main>;
 
   return (
     <main>
       <header className="top">
-        <h1>🐾 My pets</h1>
+        <h1><a href="../" className="home-link" title="CuteFamilyPet website">🐾</a> My pets</h1>
         {supabase && <button className="link" onClick={() => supabase!.auth.signOut()}>Sign out</button>}
+        <button onClick={() => showPlans(true)}>⭐ Plans</button>
         <button className="primary" onClick={() => setEditing("new")}>Add pet</button>
       </header>
       {store.mode === "demo" && (

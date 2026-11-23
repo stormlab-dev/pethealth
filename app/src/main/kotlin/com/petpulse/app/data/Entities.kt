@@ -149,3 +149,21 @@ data class RefillOrderEntity(
     val message: String?,
     val trackingUrl: String?,
 )
+
+/** A photo or video of a pet. The file lives in app storage under files/media/[fileName]. */
+@Entity(
+    tableName = "pet_media",
+    foreignKeys = [ForeignKey(entity = PetEntity::class, parentColumns = ["id"], childColumns = ["petId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("petId")],
+)
+data class MediaEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val petId: Long,
+    /** PHOTO or VIDEO */
+    val kind: String,
+    val fileName: String,
+    val mimeType: String,
+    val durationSec: Int?,
+    val caption: String?,
+    val takenAtMillis: Long,
+)

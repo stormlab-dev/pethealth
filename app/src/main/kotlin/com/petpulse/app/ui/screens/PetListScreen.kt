@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,11 +33,16 @@ class PetListViewModel(repo: PetRepository) : ViewModel() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PetListScreen(onOpen: (Long) -> Unit, onAdd: () -> Unit) {
+fun PetListScreen(onOpen: (Long) -> Unit, onAdd: () -> Unit, onPlans: () -> Unit) {
     val vm = appViewModel { PetListViewModel(it.repository) }
     val pets by vm.pets.collectAsStateWithLifecycle()
     Scaffold(
-        topBar = { TopAppBar(title = { Text("My pets") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("My pets") },
+                actions = { TextButton(onClick = onPlans) { Icon(Icons.Filled.Star, null); Spacer(Modifier.width(4.dp)); Text("Plans") } },
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = onAdd, icon = { Icon(Icons.Filled.Add, null) }, text = { Text("Add pet") })
         },
