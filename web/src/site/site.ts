@@ -12,7 +12,7 @@ btn?.addEventListener("click", () => {
 document.querySelectorAll<HTMLElement>("[data-year]").forEach((el) => (el.textContent = String(new Date().getFullYear())));
 
 // Contact form: saves to Supabase when configured, otherwise opens the visitor's email app.
-export const CONTACT_EMAIL = "hello@cutefamilypet.com";
+export const CONTACT_EMAIL = "connect@stormlabmarketing.com";
 const form = document.querySelector<HTMLFormElement>("#contact-form");
 if (form) {
   const topic = new URLSearchParams(location.search).get("topic");

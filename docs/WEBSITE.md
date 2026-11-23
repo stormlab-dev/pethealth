@@ -26,7 +26,7 @@ to `main` (`.github/workflows/web-pages.yml`).
 
 With `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set as repository variables, messages
 are saved to the `contact_messages` table (read them in Supabase → Table editor). Without them
-the form opens the visitor's email app addressed to hello@cutefamilypet.com, so set up that
+the form opens the visitor's email app addressed to connect@stormlabmarketing.com, so set up that
 mailbox (or change `CONTACT_EMAIL` in `web/src/site/site.ts`).
 
 ## Before public launch
