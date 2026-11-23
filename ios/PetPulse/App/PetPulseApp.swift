@@ -20,6 +20,7 @@ struct PetPulseApp: App {
             PetListView()
                 .task {
                     await PlanStore.shared.start()
+                    Ads.shared.start()
                     MediaFiles.pruneOrphans(keeping: (try? container.mainContext.fetch(FetchDescriptor<MediaRecord>()))?.map(\.fileName) ?? [])
                     Reminders.shared.container = container
                     await Reminders.shared.requestPermission()

@@ -29,6 +29,7 @@ struct PetListView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .bottom) { FreePlanBanner() }
             .navigationTitle("My pets")
             .navigationDestination(for: PetRecord.self) { PetDetailView(pet: $0) }
             .toolbar {

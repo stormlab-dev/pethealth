@@ -53,3 +53,6 @@ label { display: block; font-size: 13px; color: var(--muted); margin: 8px 0 4px;
 .photo-attach img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
 .ai-box { margin-top: 12px; padding: 12px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 8%, transparent); }
 .home-link { text-decoration: none; }
+
+.ad-slot { margin: 16px 0; padding: 8px; border-top: 1px solid var(--border, #e5e5e5); min-height: 90px; }
+.ad-slot small { display: block; margin-bottom: 4px; }

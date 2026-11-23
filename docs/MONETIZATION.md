@@ -67,9 +67,60 @@ To get iPhone purchases onto the server as well, either add the RevenueCat iOS S
 StoreKit calls in `ios/PetPulse/Services/PlanStore.swift`) or point App Store Server
 Notifications at RevenueCat. Purchases already carry the user's cloud id as `appAccountToken`.
 
+## Ads on the free plan
+
+Free users see one small banner ad. Premium and Family remove ads entirely.
+
+| Where | What | Where it shows |
+|---|---|---|
+| Android | Google AdMob adaptive banner | Bottom of the pet list and the Photos and videos tab |
+| iPhone | Google AdMob adaptive banner | Bottom of the pet list |
+| Web app | Google AdSense (off until configured) | Bottom of the pet list |
+
+Ads never appear on the symptom checker, AI results, medications, vaccines, vet reports, the
+Plans screen or the marketing website. The banner disappears the moment a purchase upgrades the
+plan. Consent is collected with Google's User Messaging Platform before any ad loads, and the
+Plans screen has an "Ad privacy choices" button where the law requires one.
+
+**Out of the box the apps use Google's test ad IDs**, so you can build and try them safely.
+Test ads earn nothing. Never tap your own live ads; AdMob bans accounts for it.
+
+### Accounts and steps
+
+1. **AdMob** (admob.google.com): create the account, add two apps (Android
+   `com.petpulse.app`, iOS bundle id), and create one *Banner* ad unit in each. Add payment
+   and tax info.
+2. Put the real IDs in the builds:
+   - Android: `CFP_ADMOB_APP_ID` and `CFP_ADMOB_BANNER_ID` in `~/.gradle/gradle.properties` or as
+     environment variables (CI secrets).
+   - iPhone: `CFP_ADMOB_APP_ID` and `CFP_ADMOB_BANNER_ID` build settings in `ios/project.yml` or
+     an `.xcconfig`.
+3. **AdMob → Privacy & messaging**: create a GDPR consent message and a US state regulations
+   message, and publish them. The apps show them automatically.
+4. **app-ads.txt**: AdMob gives you a line like
+   `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`. Put it in
+   `web/public/app-ads.txt` (served at `www.cutefamilypet.com/app-ads.txt`) and list the website
+   as the developer site in Play Console and App Store Connect.
+5. **Google Play Console**: set "Contains ads" to Yes, and in Data safety declare device or
+   other IDs, approximate location and app interactions collected for advertising, shared with
+   Google.
+6. **App Store Connect**: in App Privacy declare Device ID, Coarse Location and Product
+   Interaction used for third-party advertising. Add an App Tracking Transparency prompt only if
+   you later want personalized ads on iOS; without it iOS ads are non-personalized and earn less.
+7. **AdSense** (optional, web app): apply with www.cutefamilypet.com, then set
+   `VITE_ADSENSE_CLIENT` (`ca-pub-...`) and `VITE_ADSENSE_SLOT` for the web build, and add the
+   AdSense line to `web/public/ads.txt`. Approval can take a few weeks.
+
+### What to expect
+
+Banner ads in the US typically pay roughly $0.50 to $2 per 1,000 views, less elsewhere. As a
+rough guide, 1,000 daily free users opening the app twice a day is about $30 to $120 a month.
+Ads mainly work as a nudge toward Premium; rewarded ads (for example, watch a video to unlock one
+AI check) can be added later.
+
 ## Not built yet
 
-- Ads for free users (the plan flag `ads` exists; no ad SDK is added).
+- Rewarded ads (for example, one free AI check per video watched).
 - Contest voting screens in the apps (database tables and policies are in place).
 - AI highlight reels, portraits, memorial albums and prints are sold but not yet produced; they
   need the partner services above.

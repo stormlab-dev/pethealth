@@ -69,7 +69,8 @@ fun MediaTab(petId: Long, petName: String, onPlans: () -> Unit) {
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(20)) { vm.add(it) }
     val limit = customer.plan.limits.maxMedia
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.weight(1f).padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 12.dp)) {
             Text(
                 if (limit != null) "$total of $limit on the free plan · clips up to ${customer.plan.limits.maxClipSeconds}s"
@@ -95,6 +96,8 @@ fun MediaTab(petId: Long, petName: String, onPlans: () -> Unit) {
                 items(items, key = { it.id }) { m -> MediaThumb(vm.library, m) { open = m } }
             }
         }
+    }
+    com.petpulse.app.ads.FreePlanBanner()
     }
 
     open?.let { m ->

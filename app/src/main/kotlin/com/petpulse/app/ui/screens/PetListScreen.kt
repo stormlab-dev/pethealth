@@ -43,6 +43,7 @@ fun PetListScreen(onOpen: (Long) -> Unit, onAdd: () -> Unit, onPlans: () -> Unit
                 actions = { TextButton(onClick = onPlans) { Icon(Icons.Filled.Star, null); Spacer(Modifier.width(4.dp)); Text("Plans") } },
             )
         },
+        bottomBar = { com.petpulse.app.ads.FreePlanBanner() },
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = onAdd, icon = { Icon(Icons.Filled.Add, null) }, text = { Text("Add pet") })
         },
